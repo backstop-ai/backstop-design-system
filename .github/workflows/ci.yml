@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  pack:
+    name: Backstop Pack
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Backstop 0.2.0
+        run: |
+          set -euo pipefail
+          curl -fsSL -o /tmp/backstop.tar.gz \
+            https://github.com/backstop-ai/backstop-core/releases/download/v0.2.0/backstop_0.2.0_linux_amd64.tar.gz
+          tar -xzf /tmp/backstop.tar.gz -C /tmp
+          sudo install /tmp/backstop /usr/local/bin/backstop
+          backstop version
+
+      - name: Install the pinned findings engine
+        run: python3 -m pip install --quiet --disable-pip-version-check semgrep==1.156.0
+
+      - name: Prove every pack claim
+        run: backstop pack test .
