@@ -1,0 +1,44 @@
+name: release
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the proven commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - name: Tag the declared pack version
+        env:
+          PROVEN_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          VERSION="$(sed -n 's/^version: "\([0-9][0-9.]*\)"$/\1/p' pack.yml)"
+          if [ -z "$VERSION" ]; then
+            echo "::error file=pack.yml::could not resolve the declared pack version"
+            exit 1
+          fi
+          TAG="v${VERSION}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            EXISTING_SHA="$(git rev-list -n 1 "$TAG")"
+            if [ "$EXISTING_SHA" != "$PROVEN_SHA" ]; then
+              echo "::error::${TAG} already points at ${EXISTING_SHA}; refusing to move an immutable release tag"
+              exit 1
+            fi
+            echo "${TAG} already identifies the proven commit"
+            exit 0
+          fi
+          git tag "$TAG" "$PROVEN_SHA"
+          git push origin "$TAG"
