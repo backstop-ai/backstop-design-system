@@ -1,0 +1,38 @@
+schema_version: website-pack-release-evidence/v1
+subject:
+  role: design-system
+  manifest_identity: backstop-ai/backstop-design-system
+  source_coordinate: backstop-ai/backstop-design-system
+  version: "@VERSION@"
+  git_ref: "@TAG@"
+  release_commit: "@RELEASE_COMMIT@"
+  content_hash: "@CONTENT_HASH@"
+owner_artifact:
+  repository: https://github.com/backstop-ai/backstop-design-system.git
+  commit: "@OWNER_COMMIT@"
+  path: bundles/BUNDLE-001-design-system-release.bundle.md
+  sha256: "@OWNER_SHA@"
+common_checks:
+  - check: pack-check
+    command: ./bin/backstop pack check .
+    exit_code: 0
+    result: pass
+    subject_commit: "@RELEASE_COMMIT@"
+    subject_content_hash: "@CONTENT_HASH@"
+    log_ref:
+      repository: https://github.com/backstop-ai/backstop-design-system.git
+      commit: "@LOG_COMMIT@"
+      path: release-evidence/logs/pack-check.log
+      sha256: "@CHECK_SHA@"
+  - check: pack-test
+    command: ./bin/backstop pack test .
+    exit_code: 0
+    result: pass
+    subject_commit: "@RELEASE_COMMIT@"
+    subject_content_hash: "@CONTENT_HASH@"
+    log_ref:
+      repository: https://github.com/backstop-ai/backstop-design-system.git
+      commit: "@LOG_COMMIT@"
+      path: release-evidence/logs/pack-test.log
+      sha256: "@TEST_SHA@"
+documentation_semantics: null
