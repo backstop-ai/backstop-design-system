@@ -1,0 +1,38 @@
+schema_version: website-pack-release-evidence/v1
+subject:
+  role: design-system
+  manifest_identity: backstop-ai/backstop-design-system
+  source_coordinate: backstop-ai/backstop-design-system
+  version: "0.1.0"
+  git_ref: "v0.1.0"
+  release_commit: "045cd6d725cc5d728803b9dcd1b1d101c6efc7fb"
+  content_hash: "7352fce2e947a25f7e530f73e80385a24dd1f9654bb8ba7995e1fee5bee6908e"
+owner_artifact:
+  repository: https://github.com/backstop-ai/backstop-design-system.git
+  commit: "9cdc38e3165142372aa6e81045ba52819e223e8d"
+  path: bundles/BUNDLE-001-design-system-release.bundle.md
+  sha256: "da5fb729df70039302afcdecf3ed91fef8cdafb47d39a484e19fa70b8e6cb6f2"
+common_checks:
+  - check: pack-check
+    command: ./bin/backstop pack check .
+    exit_code: 0
+    result: pass
+    subject_commit: "045cd6d725cc5d728803b9dcd1b1d101c6efc7fb"
+    subject_content_hash: "7352fce2e947a25f7e530f73e80385a24dd1f9654bb8ba7995e1fee5bee6908e"
+    log_ref:
+      repository: https://github.com/backstop-ai/backstop-design-system.git
+      commit: "1f31e2c8879904006ad8aa26588c508e813e8ee0"
+      path: release-evidence/logs/pack-check.log
+      sha256: "5219f152856b134f33be3a5593579c2a5a2f3e791a2b08b8b5c3df8fed5fe494"
+  - check: pack-test
+    command: ./bin/backstop pack test .
+    exit_code: 0
+    result: pass
+    subject_commit: "045cd6d725cc5d728803b9dcd1b1d101c6efc7fb"
+    subject_content_hash: "7352fce2e947a25f7e530f73e80385a24dd1f9654bb8ba7995e1fee5bee6908e"
+    log_ref:
+      repository: https://github.com/backstop-ai/backstop-design-system.git
+      commit: "1f31e2c8879904006ad8aa26588c508e813e8ee0"
+      path: release-evidence/logs/pack-test.log
+      sha256: "d9cebf97c292956119f4004292d76d9532de06ca2e709a7a69e8ed67249d8bef"
+documentation_semantics: null
