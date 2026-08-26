@@ -1,44 +1,117 @@
-name: release
+name: Publish immutable design-system evidence
 
 on:
   workflow_run:
     workflows: [CI]
     types: [completed]
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
 
+env:
+  BACKSTOP_VERSION: 0.3.1
+
 jobs:
-  tag:
-    if: github.event.workflow_run.conclusion == 'success'
+  publish:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
-      - name: Check out the proven commit
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: main
           fetch-depth: 0
 
-      - name: Tag the declared pack version
-        env:
-          PROVEN_SHA: ${{ github.event.workflow_run.head_sha }}
+      - name: Resolve release and evidence identities
+        id: identity
         run: |
           set -euo pipefail
-          VERSION="$(sed -n 's/^version: "\([0-9][0-9.]*\)"$/\1/p' pack.yml)"
-          if [ -z "$VERSION" ]; then
-            echo "::error file=pack.yml::could not resolve the declared pack version"
-            exit 1
+          VERSION=$(sed -n 's/^version: "\([0-9][0-9.]*\)"$/\1/p' pack.yml)
+          TAG="v$VERSION"
+          OWNER_COMMIT=$(git rev-parse HEAD)
+          git fetch --quiet --tags origin
+          if git rev-parse --verify --quiet "refs/tags/$TAG" >/dev/null; then
+            RELEASE_COMMIT=$(git rev-parse "refs/tags/$TAG^{commit}")
+          else
+            RELEASE_COMMIT=$OWNER_COMMIT
           fi
-          TAG="v${VERSION}"
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            EXISTING_SHA="$(git rev-list -n 1 "$TAG")"
-            if [ "$EXISTING_SHA" != "$PROVEN_SHA" ]; then
-              echo "::error::${TAG} already points at ${EXISTING_SHA}; refusing to move an immutable release tag"
-              exit 1
-            fi
-            echo "${TAG} already identifies the proven commit"
-            exit 0
+          printf 'VERSION=%s\nTAG=%s\nOWNER_COMMIT=%s\nRELEASE_COMMIT=%s\n' "$VERSION" "$TAG" "$OWNER_COMMIT" "$RELEASE_COMMIT" >> "$GITHUB_ENV"
+          if git cat-file -e "origin/main:release-evidence/$TAG.yml" 2>/dev/null; then
+            echo 'published=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'published=false' >> "$GITHUB_OUTPUT"
           fi
-          git tag "$TAG" "$PROVEN_SHA"
-          git push origin "$TAG"
+
+      - name: Install released Backstop and Semgrep
+        if: steps.identity.outputs.published == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/release" "$RUNNER_TEMP/bin"
+          gh release download "v${BACKSTOP_VERSION}" --repo backstop-ai/backstop-core \
+            --pattern "backstop_${BACKSTOP_VERSION}_linux_amd64.tar.gz" \
+            --dir "$RUNNER_TEMP/release"
+          tar -xzf "$RUNNER_TEMP/release/backstop_${BACKSTOP_VERSION}_linux_amd64.tar.gz" -C "$RUNNER_TEMP/bin"
+          python3 -m pip install --quiet --disable-pip-version-check semgrep==1.156.0
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      - name: Preserve or create the immutable tag
+        if: steps.identity.outputs.published == 'false'
+        run: |
+          if git rev-parse --verify --quiet "refs/tags/$TAG" >/dev/null; then
+            test "$(git rev-parse "refs/tags/$TAG^{commit}")" = "$RELEASE_COMMIT"
+          else
+            git tag "$TAG" "$RELEASE_COMMIT"
+            git push origin "refs/tags/$TAG"
+          fi
+
+      - name: Capture checks from the released bytes
+        if: steps.identity.outputs.published == 'false'
+        run: |
+          mkdir -p release-evidence/logs "$RUNNER_TEMP/consumer"
+          git worktree add --detach "$RUNNER_TEMP/candidate" "$RELEASE_COMMIT"
+          (cd "$RUNNER_TEMP/candidate" && backstop pack check .) > release-evidence/logs/pack-check.log
+          (cd "$RUNNER_TEMP/candidate" && backstop pack test .) > release-evidence/logs/pack-test.log
+          printf 'project: release-probe\npacks: {}\n' > "$RUNNER_TEMP/consumer/backstop.yml"
+          (cd "$RUNNER_TEMP/consumer" && backstop pack add "backstop-ai/backstop-design-system@$VERSION")
+          CONTENT_HASH=$(sed -n 's/^[[:space:]]*content_hash:[[:space:]]*"\{0,1\}\([^"[:space:]]*\).*/\1/p' "$RUNNER_TEMP/consumer/backstop.lock" | head -n 1)
+          test -n "$CONTENT_HASH"
+          printf 'CONTENT_HASH=%s\n' "$CONTENT_HASH" >> "$GITHUB_ENV"
+
+      - name: Commit immutable check logs
+        if: steps.identity.outputs.published == 'false'
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add release-evidence/logs
+          git commit -m "Record $TAG publication checks"
+          printf 'LOG_COMMIT=%s\n' "$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          git push origin HEAD:main
+
+      - name: Commit release evidence
+        if: steps.identity.outputs.published == 'false'
+        run: |
+          OWNER_SHA=$(git show "$OWNER_COMMIT:bundles/BUNDLE-001-design-system-release.bundle.md" | sha256sum | cut -d' ' -f1)
+          CHECK_SHA=$(sha256sum release-evidence/logs/pack-check.log | cut -d' ' -f1)
+          TEST_SHA=$(sha256sum release-evidence/logs/pack-test.log | cut -d' ' -f1)
+          sed \
+            -e "s/@VERSION@/$VERSION/g" \
+            -e "s/@TAG@/$TAG/g" \
+            -e "s/@OWNER_COMMIT@/$OWNER_COMMIT/g" \
+            -e "s/@RELEASE_COMMIT@/$RELEASE_COMMIT/g" \
+            -e "s/@CONTENT_HASH@/$CONTENT_HASH/g" \
+            -e "s/@OWNER_SHA@/$OWNER_SHA/g" \
+            -e "s/@LOG_COMMIT@/$LOG_COMMIT/g" \
+            -e "s/@CHECK_SHA@/$CHECK_SHA/g" \
+            -e "s/@TEST_SHA@/$TEST_SHA/g" \
+            release-evidence/template.yml > "release-evidence/$TAG.yml"
+          git add "release-evidence/$TAG.yml"
+          git commit -m "Publish $TAG release evidence"
+          git push origin HEAD:main
+
+      - name: Create GitHub release
+        if: steps.identity.outputs.published == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --verify-tag --generate-notes
