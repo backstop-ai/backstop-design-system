@@ -71,7 +71,7 @@ rules:
       include: ["*.html"]
 
   - id: reusable-page-hero
-    pattern-regex: '(?s)data-page-hero(?:\s|=)[^>]*>.*data-page-hero(?:\s|=)'
+    pattern-regex: '(?s)data-page-hero[^>]*>.*data-page-hero[^>]*>'
     message: >-
       A rendered page must use the shared page-hero treatment exactly once.
     severity: ERROR
