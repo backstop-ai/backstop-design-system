@@ -36,6 +36,9 @@ jobs:
           else
             RELEASE_COMMIT=$OWNER_COMMIT
           fi
+          # Evidence must describe the immutable candidate, including when a
+          # publisher repair resumes after the tag was already created.
+          OWNER_COMMIT=$RELEASE_COMMIT
           printf 'VERSION=%s\nTAG=%s\nOWNER_COMMIT=%s\nRELEASE_COMMIT=%s\n' "$VERSION" "$TAG" "$OWNER_COMMIT" "$RELEASE_COMMIT" >> "$GITHUB_ENV"
           if git cat-file -e "origin/main:release-evidence/$TAG.yml" 2>/dev/null; then
             echo 'published=true' >> "$GITHUB_OUTPUT"
@@ -88,9 +91,15 @@ jobs:
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add release-evidence/logs
-          git commit -m "Record $TAG publication checks"
-          printf 'LOG_COMMIT=%s\n' "$(git rev-parse HEAD)" >> "$GITHUB_ENV"
-          git push origin HEAD:main
+          if git diff --cached --quiet; then
+            LOG_COMMIT=$(git log -1 --format=%H -- release-evidence/logs)
+            test -n "$LOG_COMMIT"
+          else
+            git commit -m "Record $TAG publication checks"
+            LOG_COMMIT=$(git rev-parse HEAD)
+            git push origin HEAD:main
+          fi
+          printf 'LOG_COMMIT=%s\n' "$LOG_COMMIT" >> "$GITHUB_ENV"
 
       - name: Commit release evidence
         if: steps.identity.outputs.published == 'false'
