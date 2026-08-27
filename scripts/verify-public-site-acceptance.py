@@ -63,7 +63,7 @@ if subject.get("manifest_identity") != pack.get("name") or subject.get("version"
 ruleset = pack.get("content", {}).get("ruleset", {})
 if subject.get("ruleset_version") != ruleset.get("version"):
     fail("subject ruleset_version does not match pack.yml")
-if contract.get("export_fingerprint_binding") != "release-evidence/v0.1.1.yml#public_site_acceptance":
+if contract.get("export_fingerprint_binding") != "release-evidence/v0.1.2.yml#public_site_acceptance":
     fail("export fingerprint is not bound to the same release evidence")
 
 declared_rules = {rule.get("id") for rule in ruleset.get("rules", []) if isinstance(rule, dict)}
@@ -89,7 +89,7 @@ for cell in cells:
         fail(f"cell {cell_id} target does not match its production filters")
     if fidelity.get("fixture_relative_path") != cell.get("negative_fixture") or fidelity.get("target_relative_path") != target:
         fail(f"cell {cell_id} path-fidelity tuple disagrees with its fixture/mutation")
-    if fidelity.get("dispatch_evidence_ref") != "release-evidence/v0.1.1.yml#common_checks.pack-test":
+    if fidelity.get("dispatch_evidence_ref") != "release-evidence/v0.1.2.yml#common_checks.pack-test":
         fail(f"cell {cell_id} dispatch evidence is not same-release")
     before = decoded(cell_id, "unique_before_base64", mutation.get("unique_before_base64"))
     replacement = decoded(cell_id, "replacement_base64", mutation.get("replacement_base64"))

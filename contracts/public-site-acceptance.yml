@@ -1,9 +1,9 @@
 schema_version: backstop-design-system/public-site-acceptance/v1
 subject:
   manifest_identity: backstop-ai/backstop-design-system
-  version: "0.1.1"
-  ruleset_version: "1.1.0"
-export_fingerprint_binding: release-evidence/v0.1.1.yml#public_site_acceptance
+  version: "0.1.2"
+  ruleset_version: "1.2.0"
+export_fingerprint_binding: release-evidence/v0.1.2.yml#public_site_acceptance
 cells:
   - id: token
     rule_id: no-raw-colors
@@ -19,7 +19,7 @@ cells:
     path_fidelity:
       fixture_relative_path: fixtures/rules/invalid/backstop-raw-color.css
       target_relative_path: assets/css/site.css
-      dispatch_evidence_ref: release-evidence/v0.1.1.yml#common_checks.pack-test
+      dispatch_evidence_ref: release-evidence/v0.1.2.yml#common_checks.pack-test
   - id: inline-style
     rule_id: no-inline-styles
     path_filters:
@@ -34,7 +34,7 @@ cells:
     path_fidelity:
       fixture_relative_path: fixtures/rules/invalid/index-inline-style.html
       target_relative_path: index.html
-      dispatch_evidence_ref: release-evidence/v0.1.1.yml#common_checks.pack-test
+      dispatch_evidence_ref: release-evidence/v0.1.2.yml#common_checks.pack-test
   - id: focus
     rule_id: focus-visible-required
     path_filters:
@@ -49,7 +49,7 @@ cells:
     path_fidelity:
       fixture_relative_path: fixtures/rules/invalid/backstop-no-focus.css
       target_relative_path: assets/css/site.css
-      dispatch_evidence_ref: release-evidence/v0.1.1.yml#common_checks.pack-test
+      dispatch_evidence_ref: release-evidence/v0.1.2.yml#common_checks.pack-test
   - id: reduced-motion
     rule_id: reduced-motion-required
     path_filters:
@@ -64,7 +64,7 @@ cells:
     path_fidelity:
       fixture_relative_path: fixtures/rules/invalid/backstop-no-reduced-motion.css
       target_relative_path: assets/css/site.css
-      dispatch_evidence_ref: release-evidence/v0.1.1.yml#common_checks.pack-test
+      dispatch_evidence_ref: release-evidence/v0.1.2.yml#common_checks.pack-test
   - id: accessibility
     rule_id: accessible-site-shell
     path_filters:
@@ -79,7 +79,7 @@ cells:
     path_fidelity:
       fixture_relative_path: fixtures/rules/invalid/index-inaccessible-shell.html
       target_relative_path: index.html
-      dispatch_evidence_ref: release-evidence/v0.1.1.yml#common_checks.pack-test
+      dispatch_evidence_ref: release-evidence/v0.1.2.yml#common_checks.pack-test
   - id: wordmark
     rule_id: canonical-wordmark
     path_filters:
@@ -94,7 +94,7 @@ cells:
     path_fidelity:
       fixture_relative_path: fixtures/rules/invalid/index-wrong-wordmark.html
       target_relative_path: index.html
-      dispatch_evidence_ref: release-evidence/v0.1.1.yml#common_checks.pack-test
+      dispatch_evidence_ref: release-evidence/v0.1.2.yml#common_checks.pack-test
   - id: reusable-presentation
     rule_id: reusable-page-hero
     path_filters:
@@ -109,7 +109,7 @@ cells:
     path_fidelity:
       fixture_relative_path: fixtures/rules/invalid/index-duplicate-hero.html
       target_relative_path: index.html
-      dispatch_evidence_ref: release-evidence/v0.1.1.yml#common_checks.pack-test
+      dispatch_evidence_ref: release-evidence/v0.1.2.yml#common_checks.pack-test
 token_asset:
   installed_relative_path: assets/design-system-tokens.css
   media_type: text/css
@@ -117,15 +117,15 @@ token_asset:
   public_output: assets/css/design-system-tokens.css
 protected_file_fingerprints:
   - path: pack.yml
-    sha256: 771066bf0abdf4c8e729f197f938ae12f110205cbf3670a287ee932ce419f449
+    sha256: 48d606b03308ccccc7d6ef8fa824bf0c827737c9fd4f8e81f41017b26befabb0
   - path: rules/design-system.yml
-    sha256: e0f43278cdc77ad69cdb063f228876b57b213a9385d7e93ca1bf2a32f34924c5
+    sha256: 7b98838b563d417f09823d5d8d75e97c1c7aca4abfb363b0159645370309796d
   - path: assets/design-system-tokens.css
     sha256: 7acb7d5381e47f40cce504a47c3877e93f7b079d050573bdb5ad22fa40421cf0
   - path: fixtures/rules/valid/backstop.css
     sha256: 400a2edb2ac3a28b1bdbbed16720e12e795a57f93be9320cbf1c088c9d3e2d18
   - path: fixtures/rules/valid/index.html
-    sha256: 2b352248c86d5db6686ea8c56ab76efa71b551fd8b171b65eb6b49bb269f0036
+    sha256: 3faf2dc1e1e1c60269a5a56cceadf81d5c1643b6d279345338e39006d93eb3cd
   - path: fixtures/rules/invalid/backstop-no-focus.css
     sha256: af034e91c0d38be7b987e47206b1e0c36a653119886a90a377d4894432bae65f
   - path: fixtures/rules/invalid/backstop-no-reduced-motion.css
@@ -133,10 +133,10 @@ protected_file_fingerprints:
   - path: fixtures/rules/invalid/backstop-raw-color.css
     sha256: 4d751458be70658eba0171bd3bd70b995c679884b877e894e6114b7953c8ed49
   - path: fixtures/rules/invalid/index-duplicate-hero.html
-    sha256: 31ecce5b4dd89019efe7a43354f8f74b236311c2f253e34f472a898e47772a70
+    sha256: f545def35dc1eb63b2eb98009cabddba77b9931f85c392928908345394042444
   - path: fixtures/rules/invalid/index-inaccessible-shell.html
-    sha256: 27cf0ad1dca7fae43a83090417b3c2625f18418f4c0e7825886ca82ea4d024ee
+    sha256: 3e83e05d4211450e172d058f82252924817fe80917694aa743e9d567b93d7b76
   - path: fixtures/rules/invalid/index-inline-style.html
-    sha256: b09fd41aefc006b441e84365587df7b582d4dce71e205c14a62f08fa5c44d9af
+    sha256: a31f8e0b3305e1bbc787513f88bc8adbd0c02cb63b1b91fe0715b0137f3c31e3
   - path: fixtures/rules/invalid/index-wrong-wordmark.html
-    sha256: 888aaf48661dd5fedbaedd23e7a35895047b178a895b8128472f52a10ad2a5aa
+    sha256: aa6c620e114a6925df0d04a5f69555ea3040b6a030913fbcd152c47d146b4586
