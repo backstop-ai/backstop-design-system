@@ -7,8 +7,8 @@ rules:
     severity: ERROR
     languages: [generic]
     paths:
-      include: ["backstop*.css"]
-      exclude: ["backstop-tokens.css"]
+      include: ["site.css", "backstop*.css"]
+      exclude: ["backstop-tokens.css", "design-system-tokens.css"]
 
   - id: no-inline-styles
     pattern-regex: '(?i)\sstyle\s*='
@@ -18,7 +18,7 @@ rules:
     severity: ERROR
     languages: [generic]
     paths:
-      include: ["index*.html"]
+      include: ["*.html"]
 
   - id: focus-visible-required
     patterns:
@@ -30,8 +30,8 @@ rules:
     severity: ERROR
     languages: [generic]
     paths:
-      include: ["backstop*.css"]
-      exclude: ["backstop-tokens.css"]
+      include: ["site.css", "backstop*.css"]
+      exclude: ["backstop-tokens.css", "design-system-tokens.css"]
 
   - id: reduced-motion-required
     patterns:
@@ -43,8 +43,8 @@ rules:
     severity: ERROR
     languages: [generic]
     paths:
-      include: ["backstop*.css"]
-      exclude: ["backstop-tokens.css"]
+      include: ["site.css", "backstop*.css"]
+      exclude: ["backstop-tokens.css", "design-system-tokens.css"]
 
   - id: canonical-wordmark
     patterns:
@@ -56,4 +56,25 @@ rules:
     severity: ERROR
     languages: [generic]
     paths:
-      include: ["index*.html"]
+      include: ["*.html"]
+
+  - id: accessible-site-shell
+    patterns:
+      - pattern-regex: '(?s)\A.*data-site-shell="field-guide-v1".*\z'
+      - pattern-not-regex: '(?s)\A(?=.*<nav[^>]*aria-label="[^"]+")(?=.*<main(?:\s|>)).*\z'
+    message: >-
+      A field-guide page must retain a named navigation landmark and one main
+      landmark.
+    severity: ERROR
+    languages: [generic]
+    paths:
+      include: ["*.html"]
+
+  - id: reusable-page-hero
+    pattern-regex: '(?s)data-page-hero(?:\s|=)[^>]*>.*data-page-hero(?:\s|=)'
+    message: >-
+      A rendered page must use the shared page-hero treatment exactly once.
+    severity: ERROR
+    languages: [generic]
+    paths:
+      include: ["*.html"]
