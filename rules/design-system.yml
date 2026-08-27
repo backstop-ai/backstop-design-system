@@ -61,10 +61,10 @@ rules:
   - id: accessible-site-shell
     patterns:
       - pattern-regex: '(?s)\A.*data-site-shell="field-guide-v1".*\z'
-      - pattern-not-regex: '(?s)\A(?=.*<nav[^>]*aria-label="[^"]+")(?=.*<main(?:\s|>)).*\z'
+      - pattern-not-regex: '(?s)\A(?=.*<nav[^>]*aria-label="Primary")(?=.*<nav[^>]*aria-label="Utility")(?=.*<main(?:\s|>)).*\z'
     message: >-
-      A field-guide page must retain a named navigation landmark and one main
-      landmark.
+      A field-guide page must retain named Primary and Utility navigation and
+      one main landmark.
     severity: ERROR
     languages: [generic]
     paths:

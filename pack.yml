@@ -1,5 +1,5 @@
 name: backstop-ai/backstop-design-system
-version: "0.1.1"
+version: "0.1.2"
 language: any
 archetype: recipes
 description: >-
@@ -30,7 +30,7 @@ recipes:
   jekyll-landing-page: recipes/jekyll-landing-page
 content:
   ruleset:
-    version: "1.1.0"
+    version: "1.2.0"
     rules:
       - id: no-raw-colors
         standard: "Product styles consume named color tokens instead of raw color literals"
@@ -98,13 +98,13 @@ content:
               negative:
                 - fixtures/rules/invalid/index-wrong-wordmark.html
       - id: accessible-site-shell
-        standard: "Every field-guide page retains its named navigation and main landmark"
+        standard: "Every field-guide page retains named Primary and Utility navigation plus its main landmark"
         engine: semgrep-design
         rule_path: rules/design-system.yml
         risk_class: correctness
         claims:
           - id: clm-006
-            text: "A public-site shell without its named navigation or main landmark breaks the accessibility contract"
+            text: "A public-site shell without named Primary and Utility navigation or its main landmark breaks the accessibility contract"
             fixtures:
               positive:
                 - fixtures/rules/valid/index.html
