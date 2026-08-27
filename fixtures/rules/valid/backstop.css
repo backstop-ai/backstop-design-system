@@ -1,6 +1,10 @@
 /* backstop-design-system */
-a { color: var(--color-ink); }
-a:focus-visible { outline: var(--focus-ring); }
+body {
+  color: var(--ds-text);
+  background: var(--ds-canvas);
+}
+a { transition: color var(--ds-motion-duration); }
+:focus-visible { outline: var(--ds-focus-ring); }
 @media (prefers-reduced-motion: reduce) {
-  * { transition-duration: var(--motion-reduced-duration); }
+  * { transition-duration: var(--ds-motion-reduced-duration); }
 }

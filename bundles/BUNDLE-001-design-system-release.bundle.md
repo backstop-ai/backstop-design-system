@@ -6,7 +6,7 @@ schema_version: bundle/v2
 
 bundle:
   name: design-system-release
-  version: "0.1.0"
+  version: "0.1.1"
   created: "2026-08-26"
   category: feature
 
@@ -25,5 +25,6 @@ hash, pack checks, and this owner artifact for downstream consumers.
 ## Components
 
 - The `backstop-ai/backstop-design-system` pack and its rule fixtures.
-- Immutable `v0.1.0` release identity.
+- Immutable `v0.1.1` release identity.
+- A seven-cell public-site acceptance export and distributable token asset.
 - Owner-hosted pack-check and pack-test evidence.

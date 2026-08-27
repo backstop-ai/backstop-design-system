@@ -21,11 +21,17 @@ silently merging into consumer-owned files.
 
 ## Enforced decisions
 
-- Product CSS consumes named colors from `backstop-tokens.css`.
+- Product CSS consumes the released `assets/design-system-tokens.css` asset.
 - HTML does not bypass the system with inline styles.
 - The canonical stylesheet retains visible keyboard focus and reduced-motion
   behavior.
 - The canonical wordmark retains the `./b` shell mark and `.sh` domain.
+- Every field-guide shell retains named navigation and a main landmark.
+- Every rendered page uses the shared page-hero treatment exactly once.
+
+`contracts/public-site-acceptance.yml` binds these seven rules to production
+paths, deterministic mutations, owner fixtures, and dispatch evidence for
+downstream actual-site acceptance.
 
 Every rule carries a compliant fixture and a targeted violation fixture. Run
 `backstop pack test .` to prove both sides of each claim.

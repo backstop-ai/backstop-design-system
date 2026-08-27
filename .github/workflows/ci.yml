@@ -30,3 +30,6 @@ jobs:
 
       - name: Prove every pack claim
         run: backstop pack test .
+
+      - name: Verify public-site acceptance export
+        run: python3 scripts/verify-public-site-acceptance.py

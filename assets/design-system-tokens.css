@@ -1,0 +1,13 @@
+:root {
+  --ds-canvas: #0d1117;
+  --ds-surface: #161b22;
+  --ds-text: #f0f6fc;
+  --ds-muted: #8b949e;
+  --ds-accent: #58a6ff;
+  --ds-border: #30363d;
+  --ds-focus-ring: 2px solid #58a6ff;
+  --ds-motion-duration: 160ms;
+  --ds-motion-reduced-duration: 0.01ms;
+  --ds-font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --ds-font-mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+}
