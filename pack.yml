@@ -1,5 +1,5 @@
 name: backstop-ai/backstop-design-system
-version: "0.1.4"
+version: "0.1.5"
 language: any
 archetype: recipes
 description: >-
@@ -30,7 +30,7 @@ recipes:
   jekyll-landing-page: recipes/jekyll-landing-page
 content:
   ruleset:
-    version: "1.3.0"
+    version: "1.3.1"
     rules:
       - id: no-raw-colors
         standard: "Product styles consume named color tokens instead of raw color literals"
@@ -102,6 +102,12 @@ content:
                 - fixtures/rules/invalid/index-duplicate-wordmark-owner.html
                 - fixtures/rules/invalid/index-hidden-wordmark-compensation.html
                 - fixtures/rules/invalid/index-css-generated-wordmark.html
+                - fixtures/rules/invalid/index-prefixed-wordmark-owner.html
+                - fixtures/rules/invalid/index-hidden-wordmark-owner.html
+                - fixtures/rules/invalid/index-aria-hidden-wordmark-owner.html
+                - fixtures/rules/invalid/index-inline-concealed-wordmark-owner.html
+                - fixtures/rules/invalid/index-aria-hidden-wordmark-component.html
+                - fixtures/rules/invalid/index-inline-concealed-wordmark-component.html
       - id: accessible-site-shell
         standard: "Every field-guide page retains named Primary and Utility navigation plus its main landmark"
         engine: semgrep-design

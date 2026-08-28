@@ -18,7 +18,7 @@ LOG_PATHS = [
     "release-evidence/logs/pack-check.log",
     "release-evidence/logs/pack-test.log",
     "release-evidence/logs/public-site-acceptance.log",
-    "release-evidence/logs/canonical-wordmark-v013-candidate.log",
+    "release-evidence/logs/canonical-wordmark-v015-candidate.log",
     "release-evidence/logs/release-workflow-safety.log",
 ]
 CANONICAL_NAMES = [
@@ -29,7 +29,10 @@ CANONICAL_NAMES = [
     "TestCanonicalWordmark_RecipeSurfaceMatchesOwnerContract",
     "TestPublicSiteAcceptance_WordmarkMutationIsUniqueAndExact",
     "TestPublicSiteAcceptance_WordmarkMutationDispatchRejects",
-    "TestCanonicalWordmarkV013_ChangeFence",
+    "TestCanonicalWordmarkV015_AcceptsExactVisibleOwnerByDispatch",
+    "TestCanonicalWordmarkV015_RejectsPrefixedOwnerMarkerByDispatch",
+    "TestCanonicalWordmarkV015_RejectsOwnerAndComponentConcealmentByDispatch",
+    "TestCanonicalWordmarkV015_ReviewCorrectionChangeFence",
 ]
 WORKFLOW_NAMES = [
     "TestReleaseWorkflow_RejectsCurrentBranchHeadFallback",
@@ -46,12 +49,23 @@ WORKFLOW_NAMES = [
     "TestReleaseWorkflow_RejectsPublicationContentAndIdentityMismatch",
     "TestReleaseWorkflow_ClassifierRegressionMatrixRetainsPolarity",
     "TestReleaseWorkflow_ExistingTagUsesImmutableClassifierBytes",
+    "TestReleaseClassifier_DerivesCandidatePackageContentHash",
+    "TestReleaseClassifier_RejectsForgedStaleAndMissingContentHashBindings",
+    "TestReleaseClassifier_RejectsForgedStaleAndMissingLogEvidenceBindings",
+    "TestReleaseWorkflow_AdversarialContentHashAndLogBindings",
+    "TestReleaseWorkflow_AdversarialCommandsResultsAndRefs",
+    "TestReleaseWorkflow_AdversarialParentsSequenceAndCommitIdentities",
+    "TestReleaseWorkflow_AdversarialTagCandidateAcceptanceOwnerAndEventIdentities",
+    "TestReleaseWorkflow_ExecutesExtractedProductionTrustedLauncher",
+    "TestReleaseWorkflow_MandatedCasesAreDistinctAndSubstantive",
+    "TestReleaseWorkflow_PreTagRunsBackstopGateAll",
+    "TestReleaseWorkflow_CompleteCandidateKillChainPrecedesTagMutation",
 ]
 CHECKS = {
     "pack-check": ("backstop pack check .", LOG_PATHS[0]),
     "pack-test": ("backstop pack test .", LOG_PATHS[1]),
     "public-site-acceptance": ("python3 scripts/verify-public-site-acceptance.py", LOG_PATHS[2]),
-    "canonical-wordmark-v013-candidate": ("python3 scripts/verify-canonical-wordmark-v013.py --candidate --base v0.1.3", LOG_PATHS[3]),
+    "canonical-wordmark-v015-candidate": ("python3 scripts/verify-canonical-wordmark-v015.py --candidate --base v0.1.4", LOG_PATHS[3]),
     "release-workflow-safety": ("python3 scripts/verify-release-workflow-safety.py", LOG_PATHS[4]),
 }
 
@@ -80,6 +94,17 @@ def blob(repo: Path, commit: str, path: str) -> bytes:
 
 def digest(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
+
+
+def candidate_content_hash(repo: Path, commit: str) -> str:
+    """Derive Backstop's package identity from the immutable candidate tree."""
+    paths = git(repo, "ls-tree", "-r", "--name-only", commit).splitlines()
+    if not paths:
+        raise ValueError("candidate package tree is empty")
+    manifest = "\n".join(
+        f"{path}:{digest(blob(repo, commit, path))}" for path in sorted(paths)
+    )
+    return digest(manifest.encode())
 
 
 def parents(repo: Path, commit: str) -> list[str]:
@@ -149,6 +174,9 @@ def is_evidence_commit(repo: Path, commit: str, tag_commit: str, tag: str) -> bo
         raise ValueError("evidence tag/candidate identity mismatch")
     if not re.fullmatch(r"[0-9a-f]{64}", str(subject["content_hash"])):
         raise ValueError("evidence content hash is malformed")
+    derived_content_hash = candidate_content_hash(repo, tag_commit)
+    if subject["content_hash"] != derived_content_hash:
+        raise ValueError("evidence content hash does not match immutable candidate bytes")
     owner = exact_mapping(evidence["owner_artifact"], {"repository", "commit", "path", "sha256"}, "owner")
     if owner["repository"] != REPOSITORY or owner["commit"] != tag_commit or owner["path"] != "bundles/BUNDLE-001-design-system-release.bundle.md":
         raise ValueError("evidence owner binding mismatch")

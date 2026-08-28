@@ -49,7 +49,7 @@ rules:
   - id: canonical-wordmark
     patterns:
       - pattern-regex: '(?s)\A.*data-backstop-wordmark.*\z'
-      - pattern-not-regex: '(?s)\A(?!(?:.*data-backstop-wordmark){2})(?=.*<a(?=[^>]*\bdata-backstop-wordmark\b)[^>]*>\s*<span(?![^>]*(?:\bhidden\b|\baria-hidden\s*=|\bstyle\s*=))[^>]*>\s*\./b\s*</span>\s*<span(?![^>]*(?:\bhidden\b|\baria-hidden\s*=|\bstyle\s*=))[^>]*>\s*backstop\s*</span>\s*<span(?![^>]*(?:\bhidden\b|\baria-hidden\s*=|\bstyle\s*=))[^>]*>\s*\.sh\s*</span>\s*</a>).*\z'
+      - pattern-not-regex: '(?s)\A(?!(?:.*data-backstop-wordmark){2})(?=.*<a(?=[^>]*\sdata-backstop-wordmark(?:\s|=|/?>))(?![^>]*(?:\bhidden(?:\s|=|/?>)|\baria-hidden\s*=\s*["'']?true|\bstyle\s*=\s*["''][^"'']*(?:display\s*:\s*none|visibility\s*:\s*hidden)))[^>]*>\s*<span(?![^>]*(?:\bhidden(?:\s|=|/?>)|\baria-hidden\s*=\s*["'']?true|\bstyle\s*=\s*["''][^"'']*(?:display\s*:\s*none|visibility\s*:\s*hidden)))[^>]*>\s*\./b\s*</span>\s*<span(?![^>]*(?:\bhidden(?:\s|=|/?>)|\baria-hidden\s*=\s*["'']?true|\bstyle\s*=\s*["''][^"'']*(?:display\s*:\s*none|visibility\s*:\s*hidden)))[^>]*>\s*backstop\s*</span>\s*<span(?![^>]*(?:\bhidden(?:\s|=|/?>)|\baria-hidden\s*=\s*["'']?true|\bstyle\s*=\s*["''][^"'']*(?:display\s*:\s*none|visibility\s*:\s*hidden)))[^>]*>\s*\.sh\s*</span>\s*</a>).*\z'
     message: >-
       The sole marked canonical wordmark owner must contain source-visible ./b,
       backstop, and .sh elements in that order.

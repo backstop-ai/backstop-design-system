@@ -88,10 +88,13 @@ jobs:
           mkdir -p release-evidence/logs
           git worktree add --detach "$RUNNER_TEMP/candidate" "$CANDIDATE_SHA"
           test "$(git -C "$RUNNER_TEMP/candidate" rev-parse HEAD)" = "$CANDIDATE_SHA"
+          (cd "$RUNNER_TEMP/candidate" && backstop artifact validate --issue ISSUE-003)
+          (cd "$RUNNER_TEMP/candidate" && backstop artifact validate --plan PLAN-ISSUE-003)
+          (cd "$RUNNER_TEMP/candidate" && backstop gate --all)
           (cd "$RUNNER_TEMP/candidate" && backstop pack check .) > release-evidence/logs/pack-check.log
           (cd "$RUNNER_TEMP/candidate" && backstop pack test .) > release-evidence/logs/pack-test.log
           (cd "$RUNNER_TEMP/candidate" && python3 scripts/verify-public-site-acceptance.py) > release-evidence/logs/public-site-acceptance.log
-          (cd "$RUNNER_TEMP/candidate" && python3 scripts/verify-canonical-wordmark-v013.py --candidate --base v0.1.3) > release-evidence/logs/canonical-wordmark-v013-candidate.log
+          (cd "$RUNNER_TEMP/candidate" && python3 scripts/verify-canonical-wordmark-v015.py --candidate --base v0.1.4) > release-evidence/logs/canonical-wordmark-v015-candidate.log
           (cd "$RUNNER_TEMP/candidate" && python3 scripts/verify-release-workflow-safety.py) > release-evidence/logs/release-workflow-safety.log
 
       - name: Preserve or create immutable candidate tag
@@ -130,7 +133,7 @@ jobs:
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add release-evidence/logs/pack-check.log release-evidence/logs/pack-test.log \
             release-evidence/logs/public-site-acceptance.log \
-            release-evidence/logs/canonical-wordmark-v013-candidate.log \
+            release-evidence/logs/canonical-wordmark-v015-candidate.log \
             release-evidence/logs/release-workflow-safety.log
           git commit -m "Record $TAG publication checks"
           LOG_COMMIT=$(git rev-parse HEAD)
@@ -145,7 +148,7 @@ jobs:
           CHECK_SHA=$(sha256sum release-evidence/logs/pack-check.log | cut -d' ' -f1)
           TEST_SHA=$(sha256sum release-evidence/logs/pack-test.log | cut -d' ' -f1)
           ACCEPTANCE_LOG_SHA=$(sha256sum release-evidence/logs/public-site-acceptance.log | cut -d' ' -f1)
-          CANDIDATE_LOG_SHA=$(sha256sum release-evidence/logs/canonical-wordmark-v013-candidate.log | cut -d' ' -f1)
+          CANDIDATE_LOG_SHA=$(sha256sum release-evidence/logs/canonical-wordmark-v015-candidate.log | cut -d' ' -f1)
           WORKFLOW_LOG_SHA=$(sha256sum release-evidence/logs/release-workflow-safety.log | cut -d' ' -f1)
           sed -e "s/@VERSION@/$VERSION/g" -e "s/@TAG@/$TAG/g" \
             -e "s/@OWNER_COMMIT@/$OWNER_COMMIT/g" -e "s/@RELEASE_COMMIT@/$RELEASE_COMMIT/g" \
@@ -166,16 +169,15 @@ jobs:
         if: steps.identity.outputs.mode != 'post-tag-noop'
         run: |
           set -euo pipefail
-          python3 scripts/verify-release-v014.py --tag "$TAG" --candidate-sha "$CANDIDATE_SHA" \
-            --evidence-commit "$EVIDENCE_COMMIT" | tee "$RUNNER_TEMP/release-v014-proof.log"
+          python3 scripts/verify-release-v015.py --tag "$TAG" --candidate-sha "$CANDIDATE_SHA" --evidence-commit "$EVIDENCE_COMMIT" | tee "$RUNNER_TEMP/release-v015-proof.log"
           printf 'candidate_sha=%s\nevidence_commit=%s\n' "$CANDIDATE_SHA" "$EVIDENCE_COMMIT" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload independent publication proof
         if: steps.identity.outputs.mode != 'post-tag-noop'
         uses: actions/upload-artifact@v4
         with:
-          name: release-v014-proof-${{ env.CANDIDATE_SHA }}
-          path: ${{ runner.temp }}/release-v014-proof.log
+          name: release-v015-proof-${{ env.CANDIDATE_SHA }}
+          path: ${{ runner.temp }}/release-v015-proof.log
 
       - name: Create GitHub release
         if: steps.identity.outputs.mode != 'post-tag-noop'
