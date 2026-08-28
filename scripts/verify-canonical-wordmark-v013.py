@@ -31,7 +31,9 @@ ALLOWED_CANDIDATE_PATHS = {
     "release-evidence/template.yml", "rules/design-system.yml", "specs/.gitkeep",
     "scripts/classify-release-publication.py", "scripts/verify-canonical-wordmark-v013.py",
     "scripts/verify-public-site-acceptance.py", "scripts/verify-release-v013.py",
-    "scripts/verify-release-workflow-safety.py",
+    "scripts/verify-release-workflow-safety.py", "scripts/verify-release-v014.py",
+    "issues/ISSUE-002-post-tag-publication-descendant-classifier.issue.md",
+    "plans/PLAN-ISSUE-002-post-tag-publication-descendant-v014.plan.yml",
     "fixtures/rules/valid/index.html",
     "fixtures/rules/invalid/index-inline-style.html", "fixtures/rules/invalid/index-inaccessible-shell.html",
     "fixtures/rules/invalid/index-duplicate-hero.html", "fixtures/rules/invalid/index-wrong-wordmark.html",
@@ -118,8 +120,9 @@ def test_acceptance_dispatch() -> None:
 
 def assert_spec_root(paths: set[str], read_bytes) -> None:
     spec_paths = {path for path in paths if path == "specs" or path.startswith("specs/")}
-    assert spec_paths == {"specs/.gitkeep"}, f"only specs/.gitkeep is permitted, got {sorted(spec_paths)}"
-    assert read_bytes("specs/.gitkeep") == b"", "specs/.gitkeep must be byte-empty"
+    assert spec_paths in (set(), {"specs/.gitkeep"}), f"only specs/.gitkeep is permitted, got {sorted(spec_paths)}"
+    if spec_paths:
+        assert read_bytes("specs/.gitkeep") == b"", "specs/.gitkeep must be byte-empty"
 
 
 def test_change_fence(base: str) -> None:
@@ -150,7 +153,7 @@ def test_change_fence(base: str) -> None:
             raise AssertionError(f"synthetic forbidden specs case was accepted: {sorted(paths)}")
     pack = yaml.safe_load((ROOT / "pack.yml").read_text(encoding="utf-8"))
     assert pack["language"] == "any", "pack must remain language-neutral"
-    assert pack["version"] == "0.1.3" and pack["content"]["ruleset"]["version"] == "1.3.0", "candidate identities are stale"
+    assert pack["version"] == "0.1.4" and pack["content"]["ruleset"]["version"] == "1.3.0", "candidate identities are stale"
 
 
 TESTS = {

@@ -50,7 +50,15 @@ jobs:
           git merge-base --is-ancestor "$CANDIDATE_SHA" origin/main
           VERSION=$(sed -n 's/^version: "\([0-9][0-9.]*\)"$/\1/p' pack.yml)
           TAG="v$VERSION"
-          MODE=$(python3 scripts/classify-release-publication.py \
+          CLASSIFIER_RUNNER=scripts/classify-release-publication.py
+          if git rev-parse --verify --quiet "refs/tags/$TAG" >/dev/null; then
+            CLASSIFIER_RUNNER="$RUNNER_TEMP/trusted-classifier-$TAG.py"
+            git show "refs/tags/$TAG:scripts/classify-release-publication.py" > "$CLASSIFIER_RUNNER"
+            CLASSIFIER_BLOB=$(git rev-parse "refs/tags/$TAG:scripts/classify-release-publication.py")
+            test "$(git hash-object "$CLASSIFIER_RUNNER")" = "$CLASSIFIER_BLOB"
+            printf 'CLASSIFIER_BLOB=%s\n' "$CLASSIFIER_BLOB" >> "$GITHUB_ENV"
+          fi
+          MODE=$(python3 "$CLASSIFIER_RUNNER" \
             --tag "$TAG" --candidate-sha "$CANDIDATE_SHA" --event-name "$EVENT_NAME" \
             --actor "$EVENT_ACTOR" --workflow-run-head-sha "$AUTOMATIC_SHA" \
             --workflow-run-head-branch "$AUTOMATIC_BRANCH" \
@@ -83,7 +91,7 @@ jobs:
           (cd "$RUNNER_TEMP/candidate" && backstop pack check .) > release-evidence/logs/pack-check.log
           (cd "$RUNNER_TEMP/candidate" && backstop pack test .) > release-evidence/logs/pack-test.log
           (cd "$RUNNER_TEMP/candidate" && python3 scripts/verify-public-site-acceptance.py) > release-evidence/logs/public-site-acceptance.log
-          (cd "$RUNNER_TEMP/candidate" && python3 scripts/verify-canonical-wordmark-v013.py --candidate --base v0.1.2) > release-evidence/logs/canonical-wordmark-v013-candidate.log
+          (cd "$RUNNER_TEMP/candidate" && python3 scripts/verify-canonical-wordmark-v013.py --candidate --base v0.1.3) > release-evidence/logs/canonical-wordmark-v013-candidate.log
           (cd "$RUNNER_TEMP/candidate" && python3 scripts/verify-release-workflow-safety.py) > release-evidence/logs/release-workflow-safety.log
 
       - name: Preserve or create immutable candidate tag
@@ -158,16 +166,16 @@ jobs:
         if: steps.identity.outputs.mode != 'post-tag-noop'
         run: |
           set -euo pipefail
-          python3 scripts/verify-release-v013.py --tag "$TAG" --candidate-sha "$CANDIDATE_SHA" \
-            --evidence-commit "$EVIDENCE_COMMIT" | tee "$RUNNER_TEMP/release-v013-proof.log"
+          python3 scripts/verify-release-v014.py --tag "$TAG" --candidate-sha "$CANDIDATE_SHA" \
+            --evidence-commit "$EVIDENCE_COMMIT" | tee "$RUNNER_TEMP/release-v014-proof.log"
           printf 'candidate_sha=%s\nevidence_commit=%s\n' "$CANDIDATE_SHA" "$EVIDENCE_COMMIT" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload independent publication proof
         if: steps.identity.outputs.mode != 'post-tag-noop'
         uses: actions/upload-artifact@v4
         with:
-          name: release-v013-proof-${{ env.CANDIDATE_SHA }}
-          path: ${{ runner.temp }}/release-v013-proof.log
+          name: release-v014-proof-${{ env.CANDIDATE_SHA }}
+          path: ${{ runner.temp }}/release-v014-proof.log
 
       - name: Create GitHub release
         if: steps.identity.outputs.mode != 'post-tag-noop'

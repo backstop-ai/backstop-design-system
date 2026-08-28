@@ -1,0 +1,488 @@
+---
+plan_id: PLAN-ISSUE-002
+spec_id: ISSUE-002
+created: "2026-08-28"
+status: draft
+coverage_threshold: 80
+
+phases:
+  - id: phase-1
+    name: "Phase 1: Real-history RED and release-proof RED"
+    tasks:
+      - id: TASK-001
+        type: test
+        title: "Reproduce the two-changed and three-byte-identical descendant RED"
+        description: |
+          Extend the executable safety driver before changing the classifier. Build a
+          real temporary Git repository whose tagged candidate contains all five
+          required publication logs, regenerate all five expected outputs, preserve
+          byte-identical bytes for pack-check, pack-test, and public-site-acceptance,
+          change only canonical-wordmark-v013-candidate and release-workflow-safety,
+          and create the exact single-parent bot commit `Record v0.1.4 publication
+          checks`. Assert the tree contains all five authenticated outputs while
+          `git diff-tree` reports exactly those two changed paths. Run the old
+          classifier and retain the substantive RED in
+          `TestReleaseWorkflow_RegeneratedFiveLogsWithTwoChangedIsTerminalNoOp` and
+          `TestReleaseWorkflow_PostTagLogDescendantAllowsByteIdenticalOutputs`; the
+          failure must be its exact-five-path predicate, not malformed metadata.
+
+          Add real-history positive evidence coverage and adversarial mutations under
+          the exact mandated names
+          `TestReleaseWorkflow_PostTagEvidenceDescendantAuthenticatesRequiredOutputs`,
+          `TestReleaseWorkflow_RejectsArbitraryPublicationPathSubsets`,
+          `TestReleaseWorkflow_RejectsPublicationContentAndIdentityMismatch`, and
+          `TestReleaseWorkflow_ClassifierRegressionMatrixRetainsPolarity`. Mutate one
+          dimension at a time: omitted/stale/forged required log bytes or hash,
+          unexpected publication path, extra/missing parent, non-descendant, wrong
+          Git author or committer name/email, wrong event actor, message, event
+          metadata, tag/candidate/evidence binding, log-ref commit/path, result, or
+          command. Preserve and execute the existing mismatch, same-candidate resume,
+          ordering, manual-SHA, branch-head, command, and terminal-side-effect tests.
+          Subset cardinality is never the oracle: the authentic two-path subset passes
+          because all five descendant blobs authenticate, while each negative subset
+          must pair its allowlisted diff with an explicit missing, stale, or forged
+          required output (or another single authentication defect) and assert that
+          specific fatal reason. Do not expect complete authentic state to fail merely
+          because fewer than five paths changed.
+
+          Add an existing-tag adversary that changes the descendant checkout's
+          `scripts/classify-release-publication.py` into an always-noop authenticator.
+          Give it an observable sentinel and prove the production launcher extracts
+          and executes classifier bytes from the immutable tag: the sentinel never
+          executes and the trusted classifier rejects the changed classifier path and
+          malicious descendant. Also parse `release-evidence/template.yml` and require
+          the candidate command to be exactly `python3
+          scripts/verify-canonical-wordmark-v013.py --candidate --base v0.1.3`, with
+          its conventional check/log identity intact. Assertions must execute the
+          production launcher and inspect Git object bytes/hashes; do not reimplement
+          its decision. Record exact RED/PASS output without skips or expected-failure
+          wrappers.
+        files:
+          - scripts/verify-release-workflow-safety.py
+          - release-evidence/template.yml
+        claims:
+          - CLM-001
+          - CLM-002
+          - CLM-003
+          - CLM-004
+        depends_on: []
+
+      - id: TASK-002
+        type: test
+        title: "Define the independent v0.1.4 publication proof RED"
+        description: |
+          Add an independent post-publication driver with the exact tests
+          `TestReleaseV014_ClassifierFixAndEvidenceAreBound`,
+          `TestReleaseV014_PreservesCanonicalWordmarkContract`, and
+          `TestReleaseV014_PreservesV013TagIdentity`. Before v0.1.4 exists, run it
+          against explicit full candidate and evidence SHAs and retain RED for the
+          absent v0.1.4 tag/evidence and stale candidate identity while independently
+          proving the existing local and remote `v0.1.3^{commit}` remain
+          `cb35c69e89844c5955d51b1b10e67da938010039`.
+
+          The finished proof contract must read already-committed Git objects, hash
+          their bytes, resolve the tagged pack independently, and validate externally
+          supplied exact SHAs. It must never consume, store, or validate a hash of its
+          own output. Its canonical-wordmark assertion dispatches the actual pack
+          rules/fixtures and checks the complete ordered `./b`, `backstop`, `.sh`
+          owner plus all eight v0.1.3 candidate checks; a version string or evidence
+          pointer alone is not proof.
+        files:
+          - scripts/verify-release-v014.py
+        claims:
+          - CLM-004
+        depends_on: []
+
+  - id: phase-2
+    name: "Phase 2: GREEN authenticated descendant classifier"
+    tasks:
+      - id: TASK-003
+        type: implementation
+        title: "Authenticate complete publication state across byte-identical outputs"
+        description: |
+          Replace exact changed-path equality without creating a path-only subset
+          allowlist. Resolve the tag to its immutable commit and require the candidate
+          to be that exact commit or an exact first-parent publication sequence. A log
+          descendant has one parent equal to the tag commit; exact bot event actor,
+          Git author and committer names/noreply email, and `Record <tag> publication
+          checks` subject; and a nonempty changed-path set wholly contained in the five
+          release log paths. Cardinality alone neither accepts nor rejects.
+
+          Authenticate all five required logs at the descendant, whether changed or
+          inherited. Define expected successful bytes in the immutable tagged release
+          contract, derive SHA-256 from those trusted bytes, and compare `git show
+          <commit>:<path>` bytes and hashes. Never derive expectations from the diff,
+          descendant code, self-declared evidence, or changed subset. Thus the genuine
+          two-path case passes, while each missing/stale/forged output fails for that
+          explicit defect.
+
+          Evidence descendants require one parent equal to the authenticated log
+          commit, exact bot identity/message, and exactly the versioned evidence path
+          changed. Validate full pack/tag/candidate/content-hash, owner, acceptance,
+          command/check/result, log-ref and recomputed-hash bindings; reject
+          self-reference and extra/missing checks. Preserve `new-candidate`, exact
+          `resume-same-candidate`, and fatal mismatch for manual differing candidates,
+          genuine later candidates, unrelated descendants and malformed sequences.
+
+          In the same GREEN implementation, update the owned
+          `release-evidence/template.yml` so its exact five conventional checks/log
+          refs record `python3 scripts/verify-canonical-wordmark-v013.py --candidate
+          --base v0.1.3`. This directly satisfies TASK-001's CLM-004 template RED
+          before TASK-005 executes; do not defer or duplicate this write later.
+        files:
+          - scripts/classify-release-publication.py
+          - release-evidence/template.yml
+        claims:
+          - CLM-001
+          - CLM-002
+          - CLM-003
+          - CLM-004
+        depends_on:
+          - TASK-001
+
+      - id: TASK-005
+        type: verification
+        title: "Run the classifier matrix GREEN before workflow integration"
+        description: |
+          Run `python3 scripts/verify-release-workflow-safety.py --focus classifier`
+          and `backstop gate`. TASK-001 must define this deterministic focus as the
+          complete classifier safety group: all positive/negative classifier history
+          cases plus the truthful template command assertion. It may omit only tests
+          whose production workflow launcher is intentionally not implemented until
+          TASK-004; it must not omit or tolerate the template assertion or any
+          classifier polarity. Require the two-path positive to PASS because all five
+          blobs authenticate, and every negative subset to report its concrete defect,
+          never cardinality. Record the exact selected test names and complete output.
+        files:
+          - scripts/classify-release-publication.py
+          - scripts/verify-release-workflow-safety.py
+          - release-evidence/template.yml
+        claims:
+          - CLM-001
+          - CLM-002
+          - CLM-003
+        depends_on:
+          - TASK-003
+
+  - id: phase-3
+    name: "Phase 3: GREEN immutable-tag launcher and exact-SHA workflow"
+    tasks:
+      - id: TASK-004
+        type: implementation
+        title: "Execute immutable-tag classifier bytes for existing-tag descendants"
+        description: |
+          Fetch full history/tags before classification. If the release tag exists,
+          resolve it to a commit, extract
+          `scripts/classify-release-publication.py` directly from that immutable Git
+          object into a runner-temporary path, verify/record its blob hash, and execute
+          only those bytes for differing-SHA descendant classification. Never import
+          or execute descendant-checkout classifier bytes. A same-candidate tag is
+          byte-identical by definition. With no tag, candidate bytes may establish
+          only `new-candidate`; they cannot authorize an existing-tag no-op. Keep all
+          launcher inputs explicit and quoted.
+
+          Bind workflow_run to its exact successful-main head SHA and manual dispatch
+          to a required full SHA; verify checkout and detached worktree HEAD equal it,
+          never current branch HEAD. Only new/resume modes run detached checks and
+          reach tag operations; post-tag-noop only reports mode, and mismatch stops all
+          checks/commits/tags/releases. Generate and explicitly stage all five logs,
+          letting Git omit byte-identical files. Run the canonical check truthfully as
+          `python3 scripts/verify-canonical-wordmark-v013.py --candidate --base v0.1.3`.
+          Consume the already-GREEN template bytes owned by TASK-003; do not rewrite or
+          assume ownership of them here.
+          Preserve separate bot commits, independent post-evidence proof, pre-tag gate
+          ordering, exact-SHA behavior if main moves, and no retag/force push.
+        files:
+          - .github/workflows/release.yml
+        claims:
+          - CLM-001
+          - CLM-002
+          - CLM-004
+        depends_on:
+          - TASK-001
+          - TASK-002
+          - TASK-003
+          - TASK-005
+
+      - id: TASK-014
+        type: verification
+        title: "Verify trusted launcher and terminal workflow GREEN"
+        description: |
+          Run the full `python3 scripts/verify-release-workflow-safety.py` and
+          `backstop gate`. Require every original and mandated test to PASS, including
+          the descendant always-noop classifier sentinel proving immutable-tag
+          extraction, exact event/SHA binding, terminal guards, complete output/evidence
+          authentication, mismatch fatality, and truthful v0.1.3-base command. Parsed
+          workflow strings without executed temporary histories are insufficient.
+        files:
+          - .github/workflows/release.yml
+          - scripts/classify-release-publication.py
+          - scripts/verify-release-workflow-safety.py
+          - release-evidence/template.yml
+        claims:
+          - CLM-001
+          - CLM-002
+          - CLM-003
+          - CLM-004
+        depends_on:
+          - TASK-004
+
+  - id: phase-4
+    name: "Phase 4: GREEN v0.1.4 identities and non-circular release proof"
+    tasks:
+      - id: TASK-006
+        type: implementation
+        title: "Synchronize only required v0.1.4 candidate identities"
+        description: |
+          Set pack version 0.1.4 while retaining ruleset 1.3.0, all seven rules,
+          fixtures, recipe versions/payloads and full wordmark standard. Advance only
+          BUNDLE-001 release metadata and public-site subject/same-release refs;
+          recompute only fingerprints whose protected bytes changed. Keep the bundle
+          exploring and do not invent requirements.
+
+          Adapt the canonical driver only for v0.1.4 candidate identity, v0.1.3
+          change-fence base, and exact issue/plan/classifier/proof/template allowlist.
+          Preserve its owner bytes, seven semantic tests and eight outputs.
+          Do not touch rules, fixtures, recipes, assets, README, historical evidence,
+          or `verify-release-v013.py`; update CI only as required.
+        files:
+          - pack.yml
+          - bundles/BUNDLE-001-design-system-release.bundle.md
+          - contracts/public-site-acceptance.yml
+          - scripts/verify-public-site-acceptance.py
+          - scripts/verify-canonical-wordmark-v013.py
+          - .github/workflows/ci.yml
+        claims:
+          - CLM-004
+        depends_on:
+          - TASK-002
+          - TASK-014
+
+      - id: TASK-015
+        type: verification
+        title: "Verify synchronized identity and template GREEN"
+        description: |
+          Run `backstop pack check .`, public-site acceptance, the identity/template
+          safety tests, and `backstop gate`. Require pack, bundle, acceptance refs,
+          fingerprints, change fence, CI, workflow and template to agree on v0.1.4,
+          with the canonical command using base v0.1.3. Require ruleset, wordmark,
+          fixtures, recipes and historical v0.1.3 bytes to remain unchanged.
+        files:
+          - pack.yml
+          - bundles/BUNDLE-001-design-system-release.bundle.md
+          - contracts/public-site-acceptance.yml
+          - scripts/verify-public-site-acceptance.py
+          - scripts/verify-canonical-wordmark-v013.py
+          - .github/workflows/ci.yml
+          - release-evidence/template.yml
+        claims:
+          - CLM-004
+        depends_on:
+          - TASK-006
+
+      - id: TASK-007
+        type: implementation
+        title: "Implement independent v0.1.4 evidence and immutability proof"
+        description: |
+          Complete `verify-release-v014.py` so its three mandated tests authenticate
+          exact candidate/evidence SHAs, first-parent log/evidence order, candidate,
+          owner, acceptance, token and log hashes, and the exact commands/results from
+          the synchronized template. Independently resolve the tagged pack content
+          hash, dispatch pack/wordmark checks, compare local/remote v0.1.3 to the fixed
+          SHA, and require a distinct immutable v0.1.4 candidate. Output only the three
+          named PASS/FAIL lines externally; never hash its own output.
+        files:
+          - scripts/verify-release-v014.py
+        claims:
+          - CLM-004
+        depends_on:
+          - TASK-002
+          - TASK-006
+          - TASK-015
+
+      - id: TASK-008
+        type: verification
+        title: "Verify the final v0.1.4 candidate GREEN"
+        description: |
+          Run pack check/test, public-site acceptance,
+          `python3 scripts/verify-canonical-wordmark-v013.py --candidate --base v0.1.3`,
+          full release-workflow safety, and `backstop gate`. Require all substantive
+          claims, eight preserved canonical names and all old/new safety tests to PASS.
+          Post-publication v0.1.4 tests remain ineligible until tag/evidence exist.
+          Verify local/remote v0.1.3 still equal the fixed SHA.
+        files:
+          - pack.yml
+          - contracts/public-site-acceptance.yml
+          - scripts/verify-public-site-acceptance.py
+          - scripts/verify-canonical-wordmark-v013.py
+          - scripts/verify-release-workflow-safety.py
+          - scripts/classify-release-publication.py
+          - scripts/verify-release-v014.py
+          - .github/workflows/ci.yml
+          - .github/workflows/release.yml
+          - bundles/BUNDLE-001-design-system-release.bundle.md
+          - release-evidence/template.yml
+        claims:
+          - CLM-001
+          - CLM-002
+          - CLM-003
+          - CLM-004
+        depends_on:
+          - TASK-007
+
+  - id: phase-5
+    name: "Phase 5: Full pre-publication release gate"
+    tasks:
+      - id: TASK-009
+        type: verification
+        title: "Validate artifacts and run the full candidate kill chain"
+        description: |
+          Run `backstop artifact validate --issue ISSUE-002`,
+          `backstop artifact validate --plan PLAN-ISSUE-002`,
+          `backstop gate --all`, `backstop pack check .`, `backstop pack test .`,
+          `python3 scripts/verify-public-site-acceptance.py`,
+          `python3 scripts/verify-canonical-wordmark-v013.py --candidate --base v0.1.3`,
+          and `python3 scripts/verify-release-workflow-safety.py`. Preserve exact
+          output. Any nonzero result, blocking finding, unexpected warning/skip,
+          missing mandated test, changed test polarity, stale identity/fingerprint,
+          or v0.1.3 tag movement stops publication. Do not add waivers, baselines,
+          suppressions, skipped tests, fake evidence, or unrelated toolchain packs.
+        files:
+          - issues/ISSUE-002-post-tag-publication-descendant-classifier.issue.md
+          - plans/PLAN-ISSUE-002-post-tag-publication-descendant-v014.plan.yml
+          - pack.yml
+          - contracts/public-site-acceptance.yml
+          - scripts/classify-release-publication.py
+          - scripts/verify-release-workflow-safety.py
+          - scripts/verify-release-v014.py
+          - .github/workflows/release.yml
+          - release-evidence/template.yml
+        claims:
+          - CLM-001
+          - CLM-002
+          - CLM-003
+          - CLM-004
+        depends_on:
+          - TASK-007
+          - TASK-008
+
+  - id: phase-6
+    name: "Phase 6: Authorized immutable v0.1.4 publication"
+    tasks:
+      - id: TASK-010
+        type: verification
+        title: "Commit and push the exact v0.1.4 candidate"
+        description: |
+          After TASK-009 passes, inspect status, diff, and history; stage only the
+          exact candidate scope listed here and create the candidate implementation
+          commit. Do not stage generated logs or v0.1.4 evidence and do not create a
+          tag manually. Push the candidate commit to main and record its full SHA.
+          Require CI for that exact SHA to pass pack-check, pack-test, public-site
+          acceptance, all eight canonical tests, and the complete old/new workflow
+          safety matrix. User authorization covers this commit and push; it does not
+          permit broad staging, unrelated edits, bypassed hooks, or force push.
+        files:
+          - issues/ISSUE-002-post-tag-publication-descendant-classifier.issue.md
+          - plans/PLAN-ISSUE-002-post-tag-publication-descendant-v014.plan.yml
+          - scripts/classify-release-publication.py
+          - scripts/verify-release-workflow-safety.py
+          - scripts/verify-release-v014.py
+          - scripts/verify-canonical-wordmark-v013.py
+          - scripts/verify-public-site-acceptance.py
+          - .github/workflows/ci.yml
+          - .github/workflows/release.yml
+          - pack.yml
+          - contracts/public-site-acceptance.yml
+          - bundles/BUNDLE-001-design-system-release.bundle.md
+          - release-evidence/template.yml
+        claims:
+          - CLM-004
+        depends_on:
+          - TASK-007
+          - TASK-009
+
+      - id: TASK-011
+        type: verification
+        title: "Prove exact candidate bytes before publishing v0.1.4"
+        description: |
+          Observe the authorized release workflow for the exact successful CI
+          workflow_run SHA (or explicitly dispatch that same full SHA). Require
+          `new-candidate`, detached HEAD equality, and the complete TASK-009 command
+          set to pass before tag mutation. Preserve exact candidate-bound log hashes.
+          Only then permit creation and normal push of `v0.1.4` at that candidate.
+          If the tag already exists it must resolve to exactly that SHA and take the
+          resume path; every other target is fatal. Verify local and remote v0.1.3
+          remain fixed before and after the v0.1.4 push. Never delete, move, recreate,
+          or force-push either tag.
+        files:
+          - .github/workflows/release.yml
+          - scripts/classify-release-publication.py
+          - pack.yml
+        claims:
+          - CLM-002
+          - CLM-004
+        depends_on:
+          - TASK-004
+          - TASK-010
+
+      - id: TASK-012
+        type: documentation
+        title: "Materialize conventional v0.1.4 logs and evidence"
+        description: |
+          Verify automation stages all five explicit generated logs but the first bot
+          commit records only files whose bytes differ; byte-identical inherited logs
+          are legitimate and must not be touched artificially. Require exact bot
+          author/committer identity and `Record v0.1.4 publication checks`, followed by
+          a separate exact `Publish v0.1.4 release evidence` bot commit. The generated
+          evidence must bind v0.1.4, the exact candidate/content hash, BUNDLE-001,
+          acceptance/token bytes, exact successful commands, the exact log commit,
+          and recomputed hashes for all five logs. No self-proof output enters these
+          files. Push normally under the user's authorization.
+        files:
+          - release-evidence/logs/pack-check.log
+          - release-evidence/logs/pack-test.log
+          - release-evidence/logs/public-site-acceptance.log
+          - release-evidence/logs/canonical-wordmark-v013-candidate.log
+          - release-evidence/logs/release-workflow-safety.log
+          - release-evidence/v0.1.4.yml
+        claims:
+          - CLM-001
+          - CLM-003
+          - CLM-004
+        depends_on:
+          - TASK-011
+
+      - id: TASK-013
+        type: verification
+        title: "Prove publication independently and leave both tags immutable"
+        description: |
+          After evidence exists, run
+          `python3 scripts/verify-release-v014.py --tag v0.1.4 --candidate-sha <FULL_SHA> --evidence-commit <FULL_SHA>`
+          and require exactly three PASS lines for its three mandated names and no
+          FAIL. Store that output only in the workflow summary/uploaded artifact bound
+          to both exact SHAs. Then run `backstop pack check .`, `backstop pack test .`,
+          `python3 scripts/verify-public-site-acceptance.py`,
+          `python3 scripts/verify-canonical-wordmark-v013.py --candidate --base v0.1.3`,
+          `python3 scripts/verify-release-workflow-safety.py`, and
+          `backstop gate --all` from the published bytes.
+
+          Fetch tags and require local and remote `v0.1.4^{commit}` equal the recorded
+          candidate, local and remote `v0.1.3^{commit}` equal
+          cb35c69e89844c5955d51b1b10e67da938010039, tag-integrity succeeds, and
+          `gh release view v0.1.4` resolves the immutable tag. Confirm log/evidence
+          commits descend from but are not contained in the tag. Preserve complete
+          outputs for Core's unblock evidence; make no Core edit.
+        files:
+          - release-evidence/v0.1.4.yml
+          - scripts/verify-release-v014.py
+          - pack.yml
+          - contracts/public-site-acceptance.yml
+        claims:
+          - CLM-001
+          - CLM-002
+          - CLM-003
+          - CLM-004
+        depends_on:
+          - TASK-007
+          - TASK-012
+---

@@ -1,9 +1,9 @@
 schema_version: backstop-design-system/public-site-acceptance/v1
 subject:
   manifest_identity: backstop-ai/backstop-design-system
-  version: "0.1.3"
+  version: "0.1.4"
   ruleset_version: "1.3.0"
-export_fingerprint_binding: release-evidence/v0.1.3.yml#public_site_acceptance
+export_fingerprint_binding: release-evidence/v0.1.4.yml#public_site_acceptance
 cells:
   - id: token
     rule_id: no-raw-colors
@@ -19,7 +19,7 @@ cells:
     path_fidelity:
       fixture_relative_path: fixtures/rules/invalid/backstop-raw-color.css
       target_relative_path: assets/css/site.css
-      dispatch_evidence_ref: release-evidence/v0.1.3.yml#common_checks.pack-test
+      dispatch_evidence_ref: release-evidence/v0.1.4.yml#common_checks.pack-test
   - id: inline-style
     rule_id: no-inline-styles
     path_filters:
@@ -34,7 +34,7 @@ cells:
     path_fidelity:
       fixture_relative_path: fixtures/rules/invalid/index-inline-style.html
       target_relative_path: index.html
-      dispatch_evidence_ref: release-evidence/v0.1.3.yml#common_checks.pack-test
+      dispatch_evidence_ref: release-evidence/v0.1.4.yml#common_checks.pack-test
   - id: focus
     rule_id: focus-visible-required
     path_filters:
@@ -49,7 +49,7 @@ cells:
     path_fidelity:
       fixture_relative_path: fixtures/rules/invalid/backstop-no-focus.css
       target_relative_path: assets/css/site.css
-      dispatch_evidence_ref: release-evidence/v0.1.3.yml#common_checks.pack-test
+      dispatch_evidence_ref: release-evidence/v0.1.4.yml#common_checks.pack-test
   - id: reduced-motion
     rule_id: reduced-motion-required
     path_filters:
@@ -64,7 +64,7 @@ cells:
     path_fidelity:
       fixture_relative_path: fixtures/rules/invalid/backstop-no-reduced-motion.css
       target_relative_path: assets/css/site.css
-      dispatch_evidence_ref: release-evidence/v0.1.3.yml#common_checks.pack-test
+      dispatch_evidence_ref: release-evidence/v0.1.4.yml#common_checks.pack-test
   - id: accessibility
     rule_id: accessible-site-shell
     path_filters:
@@ -79,7 +79,7 @@ cells:
     path_fidelity:
       fixture_relative_path: fixtures/rules/invalid/index-inaccessible-shell.html
       target_relative_path: index.html
-      dispatch_evidence_ref: release-evidence/v0.1.3.yml#common_checks.pack-test
+      dispatch_evidence_ref: release-evidence/v0.1.4.yml#common_checks.pack-test
   - id: wordmark
     rule_id: canonical-wordmark
     path_filters:
@@ -94,7 +94,7 @@ cells:
     path_fidelity:
       fixture_relative_path: fixtures/rules/invalid/index-wrong-wordmark.html
       target_relative_path: index.html
-      dispatch_evidence_ref: release-evidence/v0.1.3.yml#common_checks.pack-test
+      dispatch_evidence_ref: release-evidence/v0.1.4.yml#common_checks.pack-test
   - id: reusable-presentation
     rule_id: reusable-page-hero
     path_filters:
@@ -109,7 +109,7 @@ cells:
     path_fidelity:
       fixture_relative_path: fixtures/rules/invalid/index-duplicate-hero.html
       target_relative_path: index.html
-      dispatch_evidence_ref: release-evidence/v0.1.3.yml#common_checks.pack-test
+      dispatch_evidence_ref: release-evidence/v0.1.4.yml#common_checks.pack-test
 token_asset:
   installed_relative_path: assets/design-system-tokens.css
   media_type: text/css
@@ -117,7 +117,7 @@ token_asset:
   public_output: assets/css/design-system-tokens.css
 protected_file_fingerprints:
   - path: pack.yml
-    sha256: 023511a69a92ff421a4613bb139bac31f08cc76554b47c1a90cbd6b2c556a6ed
+    sha256: 424853946b518ab890b9f40dd431d1afb631ea887e204d80ea087ceebb44f60b
   - path: rules/design-system.yml
     sha256: 47b1c97a79d8582fa4963850b1eea20a842301a8b73c93f1600d619af5447feb
   - path: assets/design-system-tokens.css
