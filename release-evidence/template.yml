@@ -25,7 +25,7 @@ public_site_acceptance:
     sha256: "@TOKEN_SHA@"
 common_checks:
   - check: pack-check
-    command: ./bin/backstop pack check .
+    command: backstop pack check .
     exit_code: 0
     result: pass
     subject_commit: "@RELEASE_COMMIT@"
@@ -36,7 +36,7 @@ common_checks:
       path: release-evidence/logs/pack-check.log
       sha256: "@CHECK_SHA@"
   - check: pack-test
-    command: ./bin/backstop pack test .
+    command: backstop pack test .
     exit_code: 0
     result: pass
     subject_commit: "@RELEASE_COMMIT@"
@@ -57,4 +57,26 @@ common_checks:
       commit: "@LOG_COMMIT@"
       path: release-evidence/logs/public-site-acceptance.log
       sha256: "@ACCEPTANCE_LOG_SHA@"
+  - check: canonical-wordmark-v013-candidate
+    command: python3 scripts/verify-canonical-wordmark-v013.py --candidate --base v0.1.2
+    exit_code: 0
+    result: pass
+    subject_commit: "@RELEASE_COMMIT@"
+    subject_content_hash: "@CONTENT_HASH@"
+    log_ref:
+      repository: https://github.com/backstop-ai/backstop-design-system.git
+      commit: "@LOG_COMMIT@"
+      path: release-evidence/logs/canonical-wordmark-v013-candidate.log
+      sha256: "@CANDIDATE_LOG_SHA@"
+  - check: release-workflow-safety
+    command: python3 scripts/verify-release-workflow-safety.py
+    exit_code: 0
+    result: pass
+    subject_commit: "@RELEASE_COMMIT@"
+    subject_content_hash: "@CONTENT_HASH@"
+    log_ref:
+      repository: https://github.com/backstop-ai/backstop-design-system.git
+      commit: "@LOG_COMMIT@"
+      path: release-evidence/logs/release-workflow-safety.log
+      sha256: "@WORKFLOW_LOG_SHA@"
 documentation_semantics: null

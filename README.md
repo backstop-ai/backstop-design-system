@@ -13,7 +13,7 @@ reference document. The pack owns three things together:
 `jekyll-foundation@1.0.0` creates the token source, product stylesheet, and
 favicon under `docs/`.
 
-`jekyll-landing-page@1.0.0` creates the Jekyll layout and landing page under
+`jekyll-landing-page@1.0.1` creates the Jekyll layout and landing page under
 `docs/`.
 
 Both recipes are create-only. They produce known-good starting points without
@@ -25,7 +25,8 @@ silently merging into consumer-owned files.
 - HTML does not bypass the system with inline styles.
 - The canonical stylesheet retains visible keyboard focus and reduced-motion
   behavior.
-- The canonical wordmark retains the `./b` shell mark and `.sh` domain.
+- One marked canonical wordmark owner retains source-visible `./b`, `backstop`,
+  and `.sh` elements in order.
 - Every field-guide shell retains named navigation and a main landmark.
 - Every rendered page uses the shared page-hero treatment exactly once.
 

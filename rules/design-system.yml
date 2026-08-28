@@ -49,10 +49,10 @@ rules:
   - id: canonical-wordmark
     patterns:
       - pattern-regex: '(?s)\A.*data-backstop-wordmark.*\z'
-      - pattern-not-regex: '(?s)\A(?=.*>\./b<)(?=.*>\.sh<).*\z'
+      - pattern-not-regex: '(?s)\A(?!(?:.*data-backstop-wordmark){2})(?=.*<a(?=[^>]*\bdata-backstop-wordmark\b)[^>]*>\s*<span(?![^>]*(?:\bhidden\b|\baria-hidden\s*=|\bstyle\s*=))[^>]*>\s*\./b\s*</span>\s*<span(?![^>]*(?:\bhidden\b|\baria-hidden\s*=|\bstyle\s*=))[^>]*>\s*backstop\s*</span>\s*<span(?![^>]*(?:\bhidden\b|\baria-hidden\s*=|\bstyle\s*=))[^>]*>\s*\.sh\s*</span>\s*</a>).*\z'
     message: >-
-      The canonical wordmark must render the ./b mark and the .sh domain as
-      separate visible elements.
+      The sole marked canonical wordmark owner must contain source-visible ./b,
+      backstop, and .sh elements in that order.
     severity: ERROR
     languages: [generic]
     paths:

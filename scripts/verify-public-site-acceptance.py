@@ -3,6 +3,9 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import json
+import subprocess
+import tempfile
 from pathlib import Path
 
 import yaml
@@ -50,6 +53,33 @@ def decoded(cell_id: str, field: str, value: object) -> bytes:
     return result
 
 
+def verify_wordmark_acceptance(cell: dict, clean: bytes, before: bytes, replacement: bytes) -> None:
+    owner_start = clean.find(b"<a data-backstop-wordmark")
+    owner_end = clean.find(b"</a>", owner_start)
+    if owner_start < 0 or owner_end < 0 or not (owner_start < clean.find(before) < owner_end):
+        fail("wordmark mutation source is not inside the marked owner")
+    mutated = clean.replace(before, replacement, 1)
+    with tempfile.TemporaryDirectory() as directory:
+        rendered = Path(directory) / cell["mutation"]["target_relative_path"]
+        rendered.parent.mkdir(parents=True, exist_ok=True)
+        rendered.write_bytes(mutated)
+        result = subprocess.run(
+            ["semgrep", "--sarif", "--quiet", "--scan-unknown-extensions",
+             "--disable-version-check", "--metrics=off", "--config",
+             str(ROOT / "rules/design-system.yml"), str(rendered)],
+            cwd=ROOT, text=True, capture_output=True, check=False,
+        )
+        if result.returncode not in (0, 1):
+            fail(f"wordmark rule dispatch failed: {result.stderr.strip()}")
+        try:
+            sarif = json.loads(result.stdout)
+        except json.JSONDecodeError as exc:
+            fail(f"wordmark dispatch did not return SARIF: {exc}")
+        rule_ids = [finding.get("ruleId", "") for run in sarif.get("runs", []) for finding in run.get("results", [])]
+        if not any(rule_id.endswith("canonical-wordmark") for rule_id in rule_ids):
+            fail("wordmark mutation was not rejected by canonical-wordmark")
+
+
 contract = load_yaml(CONTRACT)
 pack = load_yaml(ROOT / "pack.yml")
 
@@ -63,7 +93,7 @@ if subject.get("manifest_identity") != pack.get("name") or subject.get("version"
 ruleset = pack.get("content", {}).get("ruleset", {})
 if subject.get("ruleset_version") != ruleset.get("version"):
     fail("subject ruleset_version does not match pack.yml")
-if contract.get("export_fingerprint_binding") != "release-evidence/v0.1.2.yml#public_site_acceptance":
+if contract.get("export_fingerprint_binding") != "release-evidence/v0.1.3.yml#public_site_acceptance":
     fail("export fingerprint is not bound to the same release evidence")
 
 declared_rules = {rule.get("id") for rule in ruleset.get("rules", []) if isinstance(rule, dict)}
@@ -89,7 +119,7 @@ for cell in cells:
         fail(f"cell {cell_id} target does not match its production filters")
     if fidelity.get("fixture_relative_path") != cell.get("negative_fixture") or fidelity.get("target_relative_path") != target:
         fail(f"cell {cell_id} path-fidelity tuple disagrees with its fixture/mutation")
-    if fidelity.get("dispatch_evidence_ref") != "release-evidence/v0.1.2.yml#common_checks.pack-test":
+    if fidelity.get("dispatch_evidence_ref") != "release-evidence/v0.1.3.yml#common_checks.pack-test":
         fail(f"cell {cell_id} dispatch evidence is not same-release")
     before = decoded(cell_id, "unique_before_base64", mutation.get("unique_before_base64"))
     replacement = decoded(cell_id, "replacement_base64", mutation.get("replacement_base64"))
@@ -98,6 +128,8 @@ for cell in cells:
         fail(f"cell {cell_id} before bytes must occur exactly once in its clean fixture")
     if clean.replace(before, replacement, 1) != negative_path.read_bytes():
         fail(f"cell {cell_id} negative fixture is not the exact exported mutation")
+    if cell_id == "wordmark":
+        verify_wordmark_acceptance(cell, clean, before, replacement)
 
 token = contract.get("token_asset")
 if not isinstance(token, dict):

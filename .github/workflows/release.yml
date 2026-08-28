@@ -6,6 +6,11 @@ on:
     types: [completed]
     branches: [main]
   workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: Full immutable SHA of the successful main candidate
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -15,119 +20,157 @@ env:
 
 jobs:
   publish:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || inputs.candidate_sha }}
           fetch-depth: 0
 
-      - name: Resolve release and evidence identities
+      - name: Resolve immutable candidate and publication mode
         id: identity
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_ACTOR: ${{ github.actor }}
+          AUTOMATIC_SHA: ${{ github.event.workflow_run.head_sha }}
+          AUTOMATIC_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          AUTOMATIC_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          MANUAL_SHA: ${{ inputs.candidate_sha }}
         run: |
           set -euo pipefail
+          if [ "$EVENT_NAME" = workflow_run ]; then
+            CANDIDATE_SHA=$AUTOMATIC_SHA
+          else
+            CANDIDATE_SHA=$MANUAL_SHA
+          fi
+          [[ "$CANDIDATE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          git fetch --quiet origin main --tags
+          git merge-base --is-ancestor "$CANDIDATE_SHA" origin/main
           VERSION=$(sed -n 's/^version: "\([0-9][0-9.]*\)"$/\1/p' pack.yml)
           TAG="v$VERSION"
-          OWNER_COMMIT=$(git rev-parse HEAD)
-          git fetch --quiet --tags origin
-          if git rev-parse --verify --quiet "refs/tags/$TAG" >/dev/null; then
-            RELEASE_COMMIT=$(git rev-parse "refs/tags/$TAG^{commit}")
-          else
-            RELEASE_COMMIT=$OWNER_COMMIT
-          fi
-          # Evidence must describe the immutable candidate, including when a
-          # publisher repair resumes after the tag was already created.
-          OWNER_COMMIT=$RELEASE_COMMIT
-          printf 'VERSION=%s\nTAG=%s\nOWNER_COMMIT=%s\nRELEASE_COMMIT=%s\n' "$VERSION" "$TAG" "$OWNER_COMMIT" "$RELEASE_COMMIT" >> "$GITHUB_ENV"
-          if git cat-file -e "origin/main:release-evidence/$TAG.yml" 2>/dev/null; then
-            echo 'published=true' >> "$GITHUB_OUTPUT"
-          else
-            echo 'published=false' >> "$GITHUB_OUTPUT"
-          fi
+          MODE=$(python3 scripts/classify-release-publication.py \
+            --tag "$TAG" --candidate-sha "$CANDIDATE_SHA" --event-name "$EVENT_NAME" \
+            --actor "$EVENT_ACTOR" --workflow-run-head-sha "$AUTOMATIC_SHA" \
+            --workflow-run-head-branch "$AUTOMATIC_BRANCH" \
+            --workflow-run-conclusion "$AUTOMATIC_CONCLUSION")
+          printf 'CANDIDATE_SHA=%s\nRELEASE_COMMIT=%s\nOWNER_COMMIT=%s\nVERSION=%s\nTAG=%s\nMODE=%s\n' \
+            "$CANDIDATE_SHA" "$CANDIDATE_SHA" "$CANDIDATE_SHA" "$VERSION" "$TAG" "$MODE" >> "$GITHUB_ENV"
+          printf 'mode=%s\n' "$MODE" >> "$GITHUB_OUTPUT"
+          echo "publication classification: $MODE"
 
       - name: Install released Backstop and Semgrep
-        if: steps.identity.outputs.published == 'false'
+        if: steps.identity.outputs.mode != 'post-tag-noop'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
           mkdir -p "$RUNNER_TEMP/release" "$RUNNER_TEMP/bin"
           gh release download "v${BACKSTOP_VERSION}" --repo backstop-ai/backstop-core \
-            --pattern "backstop_${BACKSTOP_VERSION}_linux_amd64.tar.gz" \
-            --dir "$RUNNER_TEMP/release"
+            --pattern "backstop_${BACKSTOP_VERSION}_linux_amd64.tar.gz" --dir "$RUNNER_TEMP/release"
           tar -xzf "$RUNNER_TEMP/release/backstop_${BACKSTOP_VERSION}_linux_amd64.tar.gz" -C "$RUNNER_TEMP/bin"
-          python3 -m pip install --quiet --disable-pip-version-check semgrep==1.156.0
+          python3 -m pip install --quiet --disable-pip-version-check semgrep==1.156.0 pyyaml
           echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
 
-      - name: Preserve or create the immutable tag
-        if: steps.identity.outputs.published == 'false'
+      - name: Prove detached candidate and capture exact logs
+        if: steps.identity.outputs.mode != 'post-tag-noop'
         run: |
-          if git rev-parse --verify --quiet "refs/tags/$TAG" >/dev/null; then
-            test "$(git rev-parse "refs/tags/$TAG^{commit}")" = "$RELEASE_COMMIT"
-          else
-            git tag "$TAG" "$RELEASE_COMMIT"
-            git push origin "refs/tags/$TAG"
-          fi
-
-      - name: Capture checks from the released bytes
-        if: steps.identity.outputs.published == 'false'
-        run: |
-          mkdir -p release-evidence/logs "$RUNNER_TEMP/consumer"
-          git worktree add --detach "$RUNNER_TEMP/candidate" "$RELEASE_COMMIT"
+          set -euo pipefail
+          mkdir -p release-evidence/logs
+          git worktree add --detach "$RUNNER_TEMP/candidate" "$CANDIDATE_SHA"
+          test "$(git -C "$RUNNER_TEMP/candidate" rev-parse HEAD)" = "$CANDIDATE_SHA"
           (cd "$RUNNER_TEMP/candidate" && backstop pack check .) > release-evidence/logs/pack-check.log
           (cd "$RUNNER_TEMP/candidate" && backstop pack test .) > release-evidence/logs/pack-test.log
           (cd "$RUNNER_TEMP/candidate" && python3 scripts/verify-public-site-acceptance.py) > release-evidence/logs/public-site-acceptance.log
+          (cd "$RUNNER_TEMP/candidate" && python3 scripts/verify-canonical-wordmark-v013.py --candidate --base v0.1.2) > release-evidence/logs/canonical-wordmark-v013-candidate.log
+          (cd "$RUNNER_TEMP/candidate" && python3 scripts/verify-release-workflow-safety.py) > release-evidence/logs/release-workflow-safety.log
+
+      - name: Preserve or create immutable candidate tag
+        if: steps.identity.outputs.mode != 'post-tag-noop'
+        run: |
+          set -euo pipefail
+          if git rev-parse --verify --quiet "refs/tags/$TAG" >/dev/null; then
+            test "$(git rev-parse "refs/tags/$TAG^{commit}")" = "$CANDIDATE_SHA"
+          else
+            git tag "$TAG" "$CANDIDATE_SHA"
+            git push origin "refs/tags/$TAG"
+          fi
+          test "$(git rev-parse "refs/tags/$TAG^{commit}")" = "$CANDIDATE_SHA"
+
+      - name: Resolve immutable package and export identities
+        if: steps.identity.outputs.mode != 'post-tag-noop'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/consumer"
           printf 'project: release-probe\npacks: {}\n' > "$RUNNER_TEMP/consumer/backstop.yml"
           (cd "$RUNNER_TEMP/consumer" && backstop pack add "backstop-ai/backstop-design-system@$VERSION")
           CONTENT_HASH=$(sed -n 's/^[[:space:]]*content_hash:[[:space:]]*"\{0,1\}\([^"[:space:]]*\).*/\1/p' "$RUNNER_TEMP/consumer/backstop.lock" | head -n 1)
           test -n "$CONTENT_HASH"
-          ACCEPTANCE_SHA=$(git show "$RELEASE_COMMIT:contracts/public-site-acceptance.yml" | sha256sum | cut -d' ' -f1)
-          TOKEN_SHA=$(git show "$RELEASE_COMMIT:assets/design-system-tokens.css" | sha256sum | cut -d' ' -f1)
-          printf 'CONTENT_HASH=%s\nACCEPTANCE_SHA=%s\nTOKEN_SHA=%s\n' "$CONTENT_HASH" "$ACCEPTANCE_SHA" "$TOKEN_SHA" >> "$GITHUB_ENV"
+          ACCEPTANCE_SHA=$(git show "$CANDIDATE_SHA:contracts/public-site-acceptance.yml" | sha256sum | cut -d' ' -f1)
+          TOKEN_SHA=$(git show "$CANDIDATE_SHA:assets/design-system-tokens.css" | sha256sum | cut -d' ' -f1)
+          OWNER_SHA=$(git show "$CANDIDATE_SHA:bundles/BUNDLE-001-design-system-release.bundle.md" | sha256sum | cut -d' ' -f1)
+          printf 'CONTENT_HASH=%s\nACCEPTANCE_SHA=%s\nTOKEN_SHA=%s\nOWNER_SHA=%s\n' "$CONTENT_HASH" "$ACCEPTANCE_SHA" "$TOKEN_SHA" "$OWNER_SHA" >> "$GITHUB_ENV"
 
-      - name: Commit immutable check logs
-        if: steps.identity.outputs.published == 'false'
+      - name: Commit immutable candidate check logs
+        if: steps.identity.outputs.mode != 'post-tag-noop'
         run: |
+          set -euo pipefail
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add release-evidence/logs
-          if git diff --cached --quiet; then
-            LOG_COMMIT=$(git log -1 --format=%H -- release-evidence/logs)
-            test -n "$LOG_COMMIT"
-          else
-            git commit -m "Record $TAG publication checks"
-            LOG_COMMIT=$(git rev-parse HEAD)
-            git push origin HEAD:main
-          fi
+          git add release-evidence/logs/pack-check.log release-evidence/logs/pack-test.log \
+            release-evidence/logs/public-site-acceptance.log \
+            release-evidence/logs/canonical-wordmark-v013-candidate.log \
+            release-evidence/logs/release-workflow-safety.log
+          git commit -m "Record $TAG publication checks"
+          LOG_COMMIT=$(git rev-parse HEAD)
+          git push origin HEAD:main
           printf 'LOG_COMMIT=%s\n' "$LOG_COMMIT" >> "$GITHUB_ENV"
 
-      - name: Commit release evidence
-        if: steps.identity.outputs.published == 'false'
+      - name: Commit immutable release evidence
+        id: evidence
+        if: steps.identity.outputs.mode != 'post-tag-noop'
         run: |
-          OWNER_SHA=$(git show "$OWNER_COMMIT:bundles/BUNDLE-001-design-system-release.bundle.md" | sha256sum | cut -d' ' -f1)
+          set -euo pipefail
           CHECK_SHA=$(sha256sum release-evidence/logs/pack-check.log | cut -d' ' -f1)
           TEST_SHA=$(sha256sum release-evidence/logs/pack-test.log | cut -d' ' -f1)
           ACCEPTANCE_LOG_SHA=$(sha256sum release-evidence/logs/public-site-acceptance.log | cut -d' ' -f1)
-          sed \
-            -e "s/@VERSION@/$VERSION/g" \
-            -e "s/@TAG@/$TAG/g" \
-            -e "s/@OWNER_COMMIT@/$OWNER_COMMIT/g" \
-            -e "s/@RELEASE_COMMIT@/$RELEASE_COMMIT/g" \
-            -e "s/@CONTENT_HASH@/$CONTENT_HASH/g" \
-            -e "s/@OWNER_SHA@/$OWNER_SHA/g" \
-            -e "s/@LOG_COMMIT@/$LOG_COMMIT/g" \
-            -e "s/@CHECK_SHA@/$CHECK_SHA/g" \
-            -e "s/@TEST_SHA@/$TEST_SHA/g" \
-            -e "s/@ACCEPTANCE_SHA@/$ACCEPTANCE_SHA/g" \
-            -e "s/@TOKEN_SHA@/$TOKEN_SHA/g" \
-            -e "s/@ACCEPTANCE_LOG_SHA@/$ACCEPTANCE_LOG_SHA/g" \
+          CANDIDATE_LOG_SHA=$(sha256sum release-evidence/logs/canonical-wordmark-v013-candidate.log | cut -d' ' -f1)
+          WORKFLOW_LOG_SHA=$(sha256sum release-evidence/logs/release-workflow-safety.log | cut -d' ' -f1)
+          sed -e "s/@VERSION@/$VERSION/g" -e "s/@TAG@/$TAG/g" \
+            -e "s/@OWNER_COMMIT@/$OWNER_COMMIT/g" -e "s/@RELEASE_COMMIT@/$RELEASE_COMMIT/g" \
+            -e "s/@CONTENT_HASH@/$CONTENT_HASH/g" -e "s/@OWNER_SHA@/$OWNER_SHA/g" \
+            -e "s/@LOG_COMMIT@/$LOG_COMMIT/g" -e "s/@CHECK_SHA@/$CHECK_SHA/g" \
+            -e "s/@TEST_SHA@/$TEST_SHA/g" -e "s/@ACCEPTANCE_SHA@/$ACCEPTANCE_SHA/g" \
+            -e "s/@TOKEN_SHA@/$TOKEN_SHA/g" -e "s/@ACCEPTANCE_LOG_SHA@/$ACCEPTANCE_LOG_SHA/g" \
+            -e "s/@CANDIDATE_LOG_SHA@/$CANDIDATE_LOG_SHA/g" -e "s/@WORKFLOW_LOG_SHA@/$WORKFLOW_LOG_SHA/g" \
             release-evidence/template.yml > "release-evidence/$TAG.yml"
           git add "release-evidence/$TAG.yml"
           git commit -m "Publish $TAG release evidence"
+          EVIDENCE_COMMIT=$(git rev-parse HEAD)
           git push origin HEAD:main
+          printf 'EVIDENCE_COMMIT=%s\n' "$EVIDENCE_COMMIT" >> "$GITHUB_ENV"
+          printf 'evidence_commit=%s\n' "$EVIDENCE_COMMIT" >> "$GITHUB_OUTPUT"
+
+      - name: Run independent post-publication identity proof
+        if: steps.identity.outputs.mode != 'post-tag-noop'
+        run: |
+          set -euo pipefail
+          python3 scripts/verify-release-v013.py --tag "$TAG" --candidate-sha "$CANDIDATE_SHA" \
+            --evidence-commit "$EVIDENCE_COMMIT" | tee "$RUNNER_TEMP/release-v013-proof.log"
+          printf 'candidate_sha=%s\nevidence_commit=%s\n' "$CANDIDATE_SHA" "$EVIDENCE_COMMIT" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload independent publication proof
+        if: steps.identity.outputs.mode != 'post-tag-noop'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-v013-proof-${{ env.CANDIDATE_SHA }}
+          path: ${{ runner.temp }}/release-v013-proof.log
 
       - name: Create GitHub release
-        if: steps.identity.outputs.published == 'false'
+        if: steps.identity.outputs.mode != 'post-tag-noop'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --verify-tag --generate-notes

@@ -1,5 +1,5 @@
 name: backstop-ai/backstop-design-system
-version: "0.1.2"
+version: "0.1.3"
 language: any
 archetype: recipes
 description: >-
@@ -30,7 +30,7 @@ recipes:
   jekyll-landing-page: recipes/jekyll-landing-page
 content:
   ruleset:
-    version: "1.2.0"
+    version: "1.3.0"
     rules:
       - id: no-raw-colors
         standard: "Product styles consume named color tokens instead of raw color literals"
@@ -85,18 +85,23 @@ content:
               negative:
                 - fixtures/rules/invalid/backstop-no-reduced-motion.css
       - id: canonical-wordmark
-        standard: "The Backstop wordmark renders the ./b shell mark and .sh domain"
+        standard: "One marked Backstop wordmark owner renders source-visible ./b, backstop, and .sh elements in order"
         engine: semgrep-design
         rule_path: rules/design-system.yml
         risk_class: correctness
         claims:
           - id: clm-005
-            text: "The canonical wordmark must preserve the shell-native brand identifier"
+            text: "The sole canonical owner preserves the complete ordered three-part shell-native brand identifier without hidden or generated substitutes"
             fixtures:
               positive:
                 - fixtures/rules/valid/index.html
               negative:
                 - fixtures/rules/invalid/index-wrong-wordmark.html
+                - fixtures/rules/invalid/index-truncated-wordmark.html
+                - fixtures/rules/invalid/index-reordered-wordmark.html
+                - fixtures/rules/invalid/index-duplicate-wordmark-owner.html
+                - fixtures/rules/invalid/index-hidden-wordmark-compensation.html
+                - fixtures/rules/invalid/index-css-generated-wordmark.html
       - id: accessible-site-shell
         standard: "Every field-guide page retains named Primary and Utility navigation plus its main landmark"
         engine: semgrep-design

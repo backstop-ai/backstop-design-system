@@ -1,0 +1,596 @@
+---
+plan_id: PLAN-ISSUE-001
+spec_id: ISSUE-001
+created: "2026-08-28"
+status: draft
+coverage_threshold: 80
+
+phases:
+  - id: phase-1
+    name: "Phase 1: Substantive RED fixture and named-test proof"
+    tasks:
+      - id: TASK-001
+        type: test
+        title: "Synchronize the canonical clean fixture and every clean-derived negative"
+        description: |
+          Establish the source-visible owner matrix before changing the rule. The sole
+          positive owner is one `data-backstop-wordmark` anchor containing three
+          adjacent semantic elements in this order: `<span>./b</span>`,
+          `<span>backstop</span>`, `<span>.sh</span>`. Preserve the rest of the valid
+          page so every non-wordmark rule keeps its positive polarity. Apply that same
+          complete owner markup to the inline-style, inaccessible-shell, and
+          duplicate-hero negatives; each must continue to differ from the clean page
+          only by its own acceptance-cell mutation. Update the wrong-wordmark negative
+          from the complete clean owner so its sole relevant delta is substitution of
+          `./b`. These fixture changes are test setup, not the rule implementation.
+        files:
+          - fixtures/rules/valid/index.html
+          - fixtures/rules/invalid/index-inline-style.html
+          - fixtures/rules/invalid/index-inaccessible-shell.html
+          - fixtures/rules/invalid/index-duplicate-hero.html
+          - fixtures/rules/invalid/index-wrong-wordmark.html
+        claims:
+          - CLM-001
+          - CLM-002
+        depends_on: []
+
+      - id: TASK-002
+        type: test
+        title: "Add the complete targeted semantic-drift negative matrix"
+        description: |
+          Derive targeted negatives from the synchronized clean page for the currently
+          green two-part truncation, reordered canonical parts, a second marked owner,
+          a hidden/accessibility-only `backstop` substitute, and CSS `content` used in
+          place of source semantic text. Keep each page otherwise conformant, use
+          actual hiding/generated-content mechanisms, and ensure no unrelated rule is
+          the reason canonical-wordmark turns RED.
+        files:
+          - fixtures/rules/invalid/index-truncated-wordmark.html
+          - fixtures/rules/invalid/index-reordered-wordmark.html
+          - fixtures/rules/invalid/index-duplicate-wordmark-owner.html
+          - fixtures/rules/invalid/index-hidden-wordmark-compensation.html
+          - fixtures/rules/invalid/index-css-generated-wordmark.html
+        claims:
+          - CLM-002
+          - CLM-003
+        depends_on: []
+
+      - id: TASK-003
+        type: test
+        title: "Introduce the nine named tests and run the eight candidate tests RED"
+        description: |
+          Create a deterministic Python test driver that dispatches real pack rules
+          and inspections rather than reimplementing the canonical-wordmark regex.
+          Split non-circular verification into a candidate driver and an independent
+          post-publication driver. Register these eight exact candidate names:
+          `TestCanonicalWordmark_AcceptsCompleteThreePartOwnerExactlyOnce`,
+          `TestCanonicalWordmark_RejectsTruncatedOwner`,
+          `TestCanonicalWordmark_RejectsSemanticDriftMatrix`,
+          `TestPackFixtures_AllClaimsRetainSubstantivePolarity`,
+          `TestCanonicalWordmark_RecipeSurfaceMatchesOwnerContract`,
+          `TestPublicSiteAcceptance_WordmarkMutationIsUniqueAndExact`,
+          `TestPublicSiteAcceptance_WordmarkMutationDispatchRejects`, and
+          `TestCanonicalWordmarkV013_ChangeFence`. The candidate driver must fail on the present
+          rule, duplicate recipe owners, stale acceptance mutation, and v0.1.2
+          candidate identities, but must neither require nor inspect a tag or generated
+          release evidence. Independently define
+          `TestReleaseV013_WordmarkIdentityAndEvidenceAreBound` in
+          `verify-release-v013.py`; it is intentionally not a candidate gate and will
+          run only after tag, logs, and evidence exist. Run the eight-test candidate
+          driver now and retain its substantive RED output.
+
+          Define `TestCanonicalWordmarkV013_ChangeFence` with an exact artifact-root
+          exception: the candidate diff may add the empty file `specs/.gitkeep`, but
+          must reject every other `specs/**` path, reject non-empty `.gitkeep` bytes,
+          and reject any spec schema/frontmatter or prose content. Exercise synthetic
+          allowed and rejected diffs so the exception cannot become a broad `specs/`
+          allowlist. The test is authored and run RED here before TASK-016 creates the
+          legitimate empty root, and runs GREEN with the full candidate in TASK-010;
+          it must continue to fence all Core paths and unrelated pack changes.
+
+          Add a separate static workflow-safety driver and run it against the current
+          release workflow/template before TASK-009. It must report seven focused,
+          independently diagnosable RED assertions:
+          `TestReleaseWorkflow_RejectsCurrentBranchHeadFallback` fails while automatic
+          publication can bind current branch HEAD instead of workflow_run.head_sha;
+          `TestReleaseWorkflow_RejectsMismatchedExistingTag` fails unless a genuine new
+          candidate whose SHA differs from an existing v0.1.3 tag terminates fatally;
+          `TestReleaseWorkflow_PostTagEvidenceDescendantIsTerminalNoOp` fails unless a
+          convention-authentic post-tag log/evidence bot descendant exits successfully
+          without checks, commits, tag operations, or a GitHub release;
+          `TestReleaseWorkflow_SameCandidateTagIsResumable` fails unless candidate SHA
+          equal to the existing tag follows the resumable proof/evidence path rather
+          than the descendant no-op or mismatch path;
+          `TestReleaseWorkflow_ChecksPrecedeTagCreation`
+          fails while any tag create/push precedes all detached-candidate checks;
+          `TestReleaseWorkflow_RequiresManualCandidateSHA` fails while manual dispatch
+          can omit an immutable SHA; and
+          `TestReleaseEvidence_RejectsFalseBinBackstopCommands` fails while template
+          commands claim `./bin/backstop` instead of the real executable invocation.
+          These tests must inspect parsed workflow/template structure and command
+          ordering, not merely search for reassuring strings. For the three existing-
+          tag cases, construct temporary Git histories and synthetic workflow_run
+          metadata so the classifier's exit/mode is executed and asserted separately.
+        files:
+          - scripts/verify-canonical-wordmark-v013.py
+          - scripts/verify-release-v013.py
+          - scripts/verify-release-workflow-safety.py
+        claims:
+          - CLM-001
+          - CLM-002
+          - CLM-003
+          - CLM-004
+          - CLM-005
+          - CLM-006
+        depends_on:
+          - TASK-001
+          - TASK-002
+
+      - id: TASK-016
+        type: setup
+        title: "Establish the empty tracked spec artifact root required by gate discovery"
+        description: |
+          Add only `specs/.gitkeep` so Backstop's test-verification artifact discovery
+          can read the conventional specs root in this reactive issue-to-plan
+          repository. This is repository-shape scaffolding, not a spec artifact: do not
+          add spec frontmatter, source lineage, mandated tests, waivers, skipped checks,
+          or any synthetic feature specification. Before continuing, reproduce the
+          current failure with both the PATH Backstop 0.2.0 and the current Core dev
+          binary, then confirm the empty tracked root removes only the `reading spec
+          dir .../specs: no such file or directory` extraction error. Any subsequent
+          test-verification finding remains binding and must be fixed normally.
+        files:
+          - specs/.gitkeep
+        claims:
+          - CLM-006
+        depends_on:
+          - TASK-003
+
+  - id: phase-2
+    name: "Phase 2: GREEN owner rule, declared claim, and recipe carrier"
+    tasks:
+      - id: TASK-004
+        type: implementation
+        title: "Enforce exactly one complete source-visible three-part owner"
+        description: |
+          Replace the file-level `./b`/`.sh` lookaheads with an engine-driven generic
+          rule that accepts exactly one marked owner whose three source elements are
+          ordered `./b`, `backstop`, `.sh`. Scope the semantic checks to that owner;
+          reject missing, substituted, reordered, duplicated, or concealed parts and
+          reject CSS-generated compensation or unrelated document text. Update the
+          canonical-wordmark standard/claim and declare the complete negative fixture
+          matrix in pack.yml while retaining `language: any`, the existing Semgrep
+          engine, and every other rule/fixture polarity. Do not bump versions in this
+          task.
+        files:
+          - rules/design-system.yml
+          - pack.yml
+        claims:
+          - CLM-001
+          - CLM-002
+          - CLM-006
+        depends_on:
+          - TASK-003
+
+      - id: TASK-005
+        type: implementation
+        title: "Make the landing-page recipe emit one legitimate contract carrier"
+        description: |
+          Keep the navigation wordmark as the single marked owner with the complete
+          three-part source markup. Remove `data-backstop-wordmark` from the footer's
+          secondary visual mark (or otherwise make it unambiguously non-owner) without
+          hiding duplicate semantic text or changing the visual design. Preserve the
+          recipe's create-only behavior; defer any convention-required recipe version
+          and README identity bump to the release-identity task.
+        files:
+          - recipes/jekyll-landing-page/payload/index.html
+        claims:
+          - CLM-003
+          - CLM-006
+        depends_on:
+          - TASK-003
+
+      - id: TASK-006
+        type: verification
+        title: "Run the focused owner GREEN checks"
+        description: |
+          Run `backstop pack check .`, `backstop pack test .`, and
+          `python3 scripts/verify-canonical-wordmark-v013.py --candidate --base v0.1.2
+          --focus owner,fixtures,recipe`. Run only the five owner/fixture/recipe names:
+          `TestCanonicalWordmark_AcceptsCompleteThreePartOwnerExactlyOnce`,
+          `TestCanonicalWordmark_RejectsTruncatedOwner`,
+          `TestCanonicalWordmark_RejectsSemanticDriftMatrix`,
+          `TestPackFixtures_AllClaimsRetainSubstantivePolarity`, and
+          `TestCanonicalWordmark_RecipeSurfaceMatchesOwnerContract`. Do not run the
+          acceptance, release-identity, change-fence, or workflow-safety assertions in
+          this phase because their implementation tasks have not run. Inspect results
+          to confirm each semantic negative fails specifically on canonical-wordmark
+          while all unrelated claims retain their polarity.
+        files:
+          - rules/design-system.yml
+          - pack.yml
+          - scripts/verify-canonical-wordmark-v013.py
+        claims:
+          - CLM-001
+          - CLM-002
+          - CLM-003
+          - CLM-006
+        depends_on:
+          - TASK-004
+          - TASK-005
+          - TASK-016
+
+  - id: phase-3
+    name: "Phase 3: GREEN acceptance export and synchronized release candidate"
+    tasks:
+      - id: TASK-007
+        type: implementation
+        title: "Stabilize pack, ruleset, recipe, bundle, and documentation identity"
+        description: |
+          Set the external pack to 0.1.3 and, following the existing minor ruleset
+          cadence for changed executable policy, set the ruleset to 1.3.0. Advance
+          BUNDLE-001's recorded release identity to 0.1.3 and set its convention-
+          compliant `bundle.updated` value for this release change, without changing
+          its exploring maturity or inventing requirements. Preserve its original
+          created date and general release-line ownership. Because the scaffolding
+          payload changes, bump only `jekyll-landing-page` from 1.0.0 to 1.0.1 and
+          update its README reference/wordmark description; leave jekyll-foundation
+          untouched. This task owns and stabilizes the final pack.yml bytes; it must
+          not attempt to write pack.yml's protected digest into the acceptance
+          contract, which is owned by TASK-008.
+        files:
+          - pack.yml
+          - bundles/BUNDLE-001-design-system-release.bundle.md
+          - recipes/jekyll-landing-page/recipe.yml
+          - README.md
+        claims:
+          - CLM-003
+          - CLM-005
+          - CLM-006
+        depends_on:
+          - TASK-003
+          - TASK-006
+
+      - id: TASK-008
+        type: implementation
+        title: "Export the mutation and fingerprint final stabilized candidate bytes"
+        description: |
+          After TASK-007 has stabilized final pack.yml identity bytes, update only the
+          wordmark acceptance cell so `unique_before_base64` is the complete three-part
+          owner markup, including the literal middle `backstop` element, and occurs
+          exactly once at the marked clean-fixture site. Make the replacement a
+          genuinely invalid owner whose resulting bytes exactly equal the targeted
+          negative fixture. Extend the verifier to locate the marked owner, enforce
+          exact-once source/replacement equality, invoke the released rule path/engine
+          against a temporary rendered-site `index.html`, parse SARIF, and require the
+          canonical-wordmark rejection. A byte-equality check, evidence reference,
+          unrelated finding, or hand-copied regex is not proof.
+
+          Bind the contract subject, export fingerprint, and all seven same-release
+          dispatch references to v0.1.3 while changing no other acceptance mutation.
+          As the sole owner of contracts/public-site-acceptance.yml, recompute its
+          protected_file_fingerprints only after every protected input is final,
+          including the stabilized pack.yml from TASK-007, rule bytes, synchronized
+          clean-derived negatives, and all new semantic negatives. Verify exact
+          coverage of pack, rule, token, and every fixture; no parallel task may hash
+          or subsequently alter those protected bytes.
+        files:
+          - contracts/public-site-acceptance.yml
+          - scripts/verify-public-site-acceptance.py
+        claims:
+          - CLM-004
+          - CLM-005
+        depends_on:
+          - TASK-003
+          - TASK-006
+          - TASK-007
+
+      - id: TASK-009
+        type: implementation
+        title: "Bind publication to an immutable CI candidate and truthful commands"
+        description: |
+          Add `backstop pack check .`, the eight-test candidate driver, and the seven
+          focused workflow-safety assertions to CI beside pack-test and public-site
+          acceptance; TASK-009 is GREEN only when every pre-implementation workflow
+          safety RED from TASK-003 becomes a specific PASS. Rewrite release identity resolution so
+          a successful automatic run takes CANDIDATE_SHA only from
+          `github.event.workflow_run.head_sha`, verifies that event concluded success
+          for main, and fails if checkout HEAD differs. Require workflow_dispatch to
+          supply an explicit full candidate SHA and verify it is the intended immutable
+          main candidate; never silently substitute current main. Before any tag is
+          created, fetch tags and invoke one shared, directly tested classifier. If no
+          tag exists, classify `new-candidate`. If tag commit equals CANDIDATE_SHA,
+          classify `resume-same-candidate` and rerun detached proof before preserving
+          the equal tag. If they differ, allow a terminal successful `post-tag-noop`
+          only for an automatic workflow_run whose actor is github-actions[bot], whose
+          head SHA is a descendant of the tag, and whose exact conventional commit is
+          either: (a) `Record v0.1.3 publication checks` changing only the expected
+          `release-evidence/logs/{pack-check,pack-test,public-site-acceptance,
+          canonical-wordmark-v013-candidate,release-workflow-safety}.log` paths, or
+          (b) `Publish v0.1.3 release evidence` changing only
+          `release-evidence/v0.1.3.yml`, with that file binding git_ref v0.1.3 and
+          release_commit equal to the tag commit. Require the expected first-parent
+          ancestry as well as actor/message/path/evidence identity; a branch descendant
+          alone is insufficient. The no-op must emit its terminal classification and
+          skip every worktree check, commit, tag, and release step. Any other differing
+          SHA--including a genuine new candidate after v0.1.3 exists--is fatal.
+
+          For `new-candidate` and `resume-same-candidate`, create a detached worktree at
+          CANDIDATE_SHA and run every release-blocking check there. Capture candidate
+          logs only after all commands pass, then create or preserve the equal tag.
+          Keep logs and rendered evidence as separate bot commits after the candidate
+          tag, followed by the GitHub release.
+
+          Make evidence truthful: released-byte commands and template strings must be
+          exactly `backstop pack check .`, `backstop pack test .`,
+          `python3 scripts/verify-public-site-acceptance.py`, and the actual candidate
+          driver command used in the detached worktree--never the historical
+          nonexistent `./bin/backstop` path. Run and record the workflow-safety driver
+          from the detached candidate too. Evidence may hash candidate and workflow-
+          safety logs,
+          because that test does not read evidence. It must not contain or hash the
+          post-publication result that validates evidence. Run the independent release
+          test only after the evidence commit and record its result externally as a
+          GitHub check/job summary and uploaded workflow artifact bound to the evidence
+          commit and candidate SHA, not as a self-referential repository log.
+        files:
+          - .github/workflows/ci.yml
+          - .github/workflows/release.yml
+          - release-evidence/template.yml
+          - scripts/classify-release-publication.py
+        claims:
+          - CLM-004
+          - CLM-005
+          - CLM-006
+        depends_on:
+          - TASK-003
+          - TASK-006
+
+      - id: TASK-010
+        type: verification
+        title: "Verify the synchronized v0.1.3 candidate"
+        description: |
+          From the final candidate bytes run, in order: `backstop pack check .`,
+          `backstop pack test .`,
+          `python3 scripts/verify-canonical-wordmark-v013.py --candidate --base v0.1.2`,
+          `python3 scripts/verify-public-site-acceptance.py`,
+          `python3 scripts/verify-release-workflow-safety.py`, and `backstop gate`.
+          Require all eight candidate-phase names to report PASS; do not run or count
+          `TestReleaseV013_WordmarkIdentityAndEvidenceAreBound` before publication.
+          Require all seven pack claims to retain
+          substantive positive/negative polarity, the acceptance mutation to dispatch
+          and reject, fingerprints to match, and the change fence to contain no Core
+          path, baked language/tool branch, unrelated cell, or visual redesign.
+          Require all seven focused workflow-safety names to report PASS with their
+          individual diagnostics.
+        files:
+          - pack.yml
+          - contracts/public-site-acceptance.yml
+          - specs/.gitkeep
+          - scripts/verify-canonical-wordmark-v013.py
+          - scripts/verify-public-site-acceptance.py
+          - scripts/verify-release-workflow-safety.py
+          - scripts/classify-release-publication.py
+          - .github/workflows/release.yml
+          - release-evidence/template.yml
+        claims:
+          - CLM-001
+          - CLM-002
+          - CLM-003
+          - CLM-004
+          - CLM-005
+          - CLM-006
+        depends_on:
+          - TASK-007
+          - TASK-008
+          - TASK-009
+
+  - id: phase-4
+    name: "Phase 4: Full pre-publication kill chain"
+    tasks:
+      - id: TASK-011
+        type: verification
+        title: "Run artifact, full-gate, pack, acceptance, and release-readiness checks"
+        description: |
+          Run `backstop artifact validate --plan PLAN-ISSUE-001`, `backstop gate --all`,
+          `backstop pack check .`, `backstop pack test .`,
+          `python3 scripts/verify-public-site-acceptance.py`, and
+          `python3 scripts/verify-canonical-wordmark-v013.py --candidate --base v0.1.2`,
+          then `python3 scripts/verify-release-workflow-safety.py`.
+          Require the eight candidate tests and record exact command output for
+          implementation evidence. The ninth release/evidence test is not eligible to
+          run in this phase. Every nonzero command, blocking gate finding, missing
+          mandated focused test, merely byte-equal acceptance mutation, stale
+          0.1.2/1.2.0 identity, dirty protected hash, fixture-polarity failure, or
+          workflow-safety failure remains fatal.
+
+          Apply the gate's actual enforcement semantics to a successful
+          `backstop gate --all`: record its complete output and exact advisory/skip
+          reasons, but do not promote the known capability-absent warnings for
+          substantiveness, coverage, and contracts, or the globally unavailable
+          baseline and unimplemented-ledger skips, into release blockers. Likewise,
+          record the expected absence of toolchain-pack capabilities in this
+          language-neutral recipe repository with `packs: {}`; do not add language or
+          toolchain packs merely to silence it. This allowance is closed to those
+          exact warning/skip classes. Any unexpected warning class, changed reason,
+          newly available capability that fails, or gate verdict other than PASS must
+          stop publication and be surfaced. Never add a waiver, suppression, baseline,
+          fake ledger, toolchain configuration, skipped test, or other configuration
+          hack to alter the result.
+        files:
+          - plans/PLAN-ISSUE-001-canonical-wordmark-owner-v013.plan.yml
+          - pack.yml
+          - contracts/public-site-acceptance.yml
+          - specs/.gitkeep
+          - scripts/verify-public-site-acceptance.py
+          - scripts/verify-canonical-wordmark-v013.py
+          - scripts/verify-release-workflow-safety.py
+          - scripts/classify-release-publication.py
+          - .github/workflows/release.yml
+          - release-evidence/template.yml
+        claims:
+          - CLM-001
+          - CLM-002
+          - CLM-003
+          - CLM-004
+          - CLM-005
+          - CLM-006
+        depends_on:
+          - TASK-007
+          - TASK-008
+          - TASK-009
+          - TASK-010
+
+  - id: phase-5
+    name: "Phase 5: Conventional commit, publication, evidence, and immutable-tag proof"
+    tasks:
+      - id: TASK-012
+        type: verification
+        title: "Create and push the single release-candidate implementation commit"
+        description: |
+          After TASK-011 is clean, inspect status/diff/history, stage only the issue's
+          allowlisted external-pack files (including the plan and source issue), and
+          create one implementation commit for the v0.1.3 candidate. Do not include
+          generated v0.1.3 evidence or publication logs in this commit and do not tag
+          locally. Stage exactly the files listed by this task--no broad directory add.
+          Push the candidate to main, record its immutable SHA, then require that exact
+          SHA's CI run to succeed with pack-check, pack-test, public acceptance, and
+          all eight candidate-phase named tests plus all seven focused workflow-safety
+          assertions. The unchanged tag-integrity workflow is observed later but is
+          not staged by this task.
+        files:
+          - issues/ISSUE-001-canonical-wordmark-owner-v013.issue.md
+          - plans/PLAN-ISSUE-001-canonical-wordmark-owner-v013.plan.yml
+          - specs/.gitkeep
+          - rules/design-system.yml
+          - pack.yml
+          - fixtures/rules/valid/index.html
+          - fixtures/rules/invalid/index-inline-style.html
+          - fixtures/rules/invalid/index-inaccessible-shell.html
+          - fixtures/rules/invalid/index-duplicate-hero.html
+          - fixtures/rules/invalid/index-wrong-wordmark.html
+          - fixtures/rules/invalid/index-truncated-wordmark.html
+          - fixtures/rules/invalid/index-reordered-wordmark.html
+          - fixtures/rules/invalid/index-duplicate-wordmark-owner.html
+          - fixtures/rules/invalid/index-hidden-wordmark-compensation.html
+          - fixtures/rules/invalid/index-css-generated-wordmark.html
+          - recipes/jekyll-landing-page/payload/index.html
+          - recipes/jekyll-landing-page/recipe.yml
+          - contracts/public-site-acceptance.yml
+          - scripts/verify-public-site-acceptance.py
+          - scripts/verify-canonical-wordmark-v013.py
+          - scripts/verify-release-v013.py
+          - scripts/verify-release-workflow-safety.py
+          - scripts/classify-release-publication.py
+          - bundles/BUNDLE-001-design-system-release.bundle.md
+          - README.md
+          - .github/workflows/ci.yml
+          - .github/workflows/release.yml
+          - release-evidence/template.yml
+        claims:
+          - CLM-005
+          - CLM-006
+        depends_on:
+          - TASK-007
+          - TASK-008
+          - TASK-009
+          - TASK-011
+
+      - id: TASK-013
+        type: verification
+        title: "Prove the detached candidate completely, then publish its tag"
+        description: |
+          For workflow_run, assert CANDIDATE_SHA equals the successful CI event's exact
+          `workflow_run.head_sha`; for manual dispatch, require and validate the
+          caller-supplied immutable SHA. Fail if either differs from detached worktree
+          HEAD. Fetch tags and run the shared classifier before any proof or mutation.
+          Assert a legitimate conventional log/evidence bot descendant selects the
+          terminal successful `post-tag-noop` path and that every later job step is
+          guarded off. Assert an equal existing tag selects
+          `resume-same-candidate`. Assert any other differing tag selects a fatal
+          mismatch and cannot reach proof, commit, tag, or release operations. Only
+          `new-candidate` and `resume-same-candidate` continue. With no tag creation
+          yet, run from their detached candidate:
+          `backstop pack check .`, `backstop pack test .`,
+          `python3 scripts/verify-public-site-acceptance.py`, and the eight-test
+          candidate verifier, followed by
+          `python3 scripts/verify-release-workflow-safety.py`. Require every command,
+          all eight candidate tests, and all seven workflow-safety assertions to pass, preserve
+          their exact candidate-SHA-bound logs, and only then create/push v0.1.3 (or
+          preserve an already-equal resumable tag). Assert the pushed tag resolves to
+          CANDIDATE_SHA. Never retag, force-push, or tag later evidence commits.
+        files:
+          - .github/workflows/release.yml
+          - release-evidence/template.yml
+          - scripts/verify-release-workflow-safety.py
+          - scripts/classify-release-publication.py
+          - pack.yml
+        claims:
+          - CLM-005
+          - CLM-006
+        depends_on:
+          - TASK-009
+          - TASK-012
+
+      - id: TASK-014
+        type: documentation
+        title: "Commit candidate check logs and immutable v0.1.3 evidence separately"
+        description: |
+          Verify the publication workflow creates its conventional first bot commit
+          for released-byte logs and a separate second bot commit for
+          `release-evidence/v0.1.3.yml`. The evidence must bind v0.1.3, the immutable
+          candidate SHA, resolved pack content hash, BUNDLE-001 bytes, acceptance
+          export/token hashes, and passing pack-check, pack-test, public acceptance,
+          eight-test candidate, and seven-test workflow-safety logs from the pre-tag
+          detached proof. Template
+          command values must byte-for-byte describe the real bare `backstop` and
+          Python commands that produced those logs. No hand-authored placeholder,
+          branch-tip substitution, or pointer without matching hashes is acceptable.
+        files:
+          - release-evidence/logs/pack-check.log
+          - release-evidence/logs/pack-test.log
+          - release-evidence/logs/public-site-acceptance.log
+          - release-evidence/logs/canonical-wordmark-v013-candidate.log
+          - release-evidence/logs/release-workflow-safety.log
+          - release-evidence/v0.1.3.yml
+        claims:
+          - CLM-005
+        depends_on:
+          - TASK-013
+
+      - id: TASK-015
+        type: verification
+        title: "Run the independent ninth test and prove immutable publication"
+        description: |
+          After the evidence commit exists on updated main, run the independent
+          `python3 scripts/verify-release-v013.py --tag v0.1.3 --candidate-sha <SHA>
+          --evidence-commit <SHA>` so the exact ninth name
+          `TestReleaseV013_WordmarkIdentityAndEvidenceAreBound` verifies the already
+          materialized evidence, candidate content hash, owner bundle, acceptance
+          export, truthful command strings/log hashes, and tag binding. This verifier
+          must not read or validate a hash of its own output. Record its exact result
+          outside repository evidence as a GitHub check/job summary and uploaded
+          workflow artifact attached to the evidence commit and candidate SHA.
+
+          Also run `backstop pack check .`, `backstop pack test .`,
+          `python3 scripts/verify-public-site-acceptance.py`, and `backstop gate --all`.
+          Fetch tags and use `git rev-parse v0.1.3^{commit}` plus
+          `git ls-remote --tags origin refs/tags/v0.1.3` to prove local and remote tag
+          both equal the recorded release commit; verify tag-integrity succeeded and
+          `gh release view v0.1.3` resolves that tag. Confirm the two evidence commits
+          are descendants of, never contents of or replacements for, the immutable
+          candidate tag. Preserve exact outputs as the final implementation evidence
+          Core can use to adopt the external pack; make no Core edits here.
+        files:
+          - release-evidence/v0.1.3.yml
+          - scripts/verify-release-v013.py
+          - pack.yml
+          - contracts/public-site-acceptance.yml
+        claims:
+          - CLM-004
+          - CLM-005
+          - CLM-006
+        depends_on:
+          - TASK-009
+          - TASK-014
+---
